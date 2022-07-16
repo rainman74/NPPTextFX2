@@ -5315,21 +5315,7 @@ EXTERNC PFUNCPLUGINCMD pfhelp(void) {
 // ensure this version number matches those in the Dev-C++ version resource
 EXTERNC PFUNCPLUGINCMD pfabout(void) {
   MessageBox(g_nppData._nppHandle,
-    PLUGIN_NAME " v0.30 " /* "Special " */ " ("
-#if defined(__BORLANDC__)
-  "Borland C++ 5.51"
-#elif defined(__POCC__)
-  "Pelles-C 4.5"
-#elif defined(_MSC_VER)
-  "Microsoft Visual C++ Toolkit 2003"
-#elif defined(__DMC__)
-  "Digital Mars 849"
-#elif defined(__WATCOMC__)
-  "OpenWatcom32 1.6" // The current settings produce a Win98 incompatible DLL.
-#elif defined(__MINGW32__)
-  "MinGW/GCC 3.45"
-#endif
-    "), a GNU GPL Plugin for Notepad++ by Chris Severance,\r\n"// and other authors.\r\n"
+    PLUGIN_NAME " v0.31, a Plugin for Notepad++ by Chris Severance,\r\n"// and other authors.\r\n"
     "performs a variety of common conversions on selected text.\r\n"
 #if NPPDEBUG
     "\r\nThis DEBUG edition functions exactly like the non debug but the DLL is larger and you may\r\n"
@@ -7196,11 +7182,11 @@ struct FuncItem funcItem[]={
 {NPPTEXT("E:Line up multiple lines by (,)"),pflineupcomma,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("E:Line up multiple lines by (=)"),pflineupequals,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("E:Line up multiple lines by (Clipboard Character)"),pflineupclipboard,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("E:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("E:Unwrap Text"),pfunwraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("E:ReWrap Text to (Clipboard or 72) width"),pfrewraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("E:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("E:Unwrap Text"),pfunwraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("E:ReWrap Text to (Clipboard or 72) width"),pfrewraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("E:Extend selection as rectangular to end of file"),pfextendblock,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("E:Pad rectangular selection with spaces"),pfextendblockspaces,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("E:Pad rectangular selection with spaces"),pfextendblockspaces,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Encode URI Component"),pfencodeURIcomponent,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Encode HTML (&&<>\")"),pfencodeHTML,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Strip HTML tags table tabs"),pfstripHTMLtags,0,FALSE NPPPLUGINACCELERATOR(NULL)},
