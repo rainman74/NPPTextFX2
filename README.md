@@ -10,6 +10,7 @@ So I grabbed the source code with the aim to bypass the blocking. But in the pro
 
 The plugin is now loaded again by Notepad++ and should you disable that again even with the new name, then I will adjust the plugin again.
 
-Original source code for version 0.25 (dated 2008) can be fround from https://sourceforge.net/projects/npp-plugins/files/TextFX/. That code can be made to build on Visual Studio 2022.
-
+This code can be build on Visual Studio 2022 (Community Edition).
 The 64 bit version of the plugin can also be compiled, but the functions do not work in large parts.
+
+Original source code for version 0.25 (dated 2008) can be fround from https://sourceforge.net/projects/npp-plugins/files/TextFX/.
