@@ -1,0 +1,76 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "popfindr.h"
+
+REPLACEDLG1 DIALOG 0, 0, 169, 293
+STYLE DS_MODALFRAME | 0x814L | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MAXIMIZEBOX
+CAPTION "Find/Replace"
+FONT 8, "MS Shell Dlg"
+{
+ CONTROL "", IDC_EDTFIND, "Scintilla", 132 | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 4, 35, 165, 60
+ CONTROL "", IDC_EDTREPLACE, "Scintilla", 132 | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 4, 98, 165, 60
+ DEFPUSHBUTTON "&Find", IDC_PSHFIND, 2, 163, 50, 14, WS_TABSTOP | WS_GROUP
+ PUSHBUTTON "Cou&nt", IDC_PSHCOUNT, 55, 163, 46, 14, WS_TABSTOP
+ GROUPBOX "", -1, 0, 176, 104, 21
+ PUSHBUTTON "Repl&&FA&gain", IDC_PSHREPLACEFIND, 2, 181, 50, 14, WS_TABSTOP
+ CONTROL "1", IDC_EDTREPLACECT, "edit", ES_NUMBER | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP, 55, 183, 34, 12
+ CONTROL "", IDC_UPDOWN, "msctls_updown32", 162 | WS_CHILD | WS_VISIBLE, 90, 183, 10, 12
+ PUSHBUTTON "&Replace Rest", IDC_PSHREPLACEREST, 2, 198, 50, 14, WS_TABSTOP
+ CONTROL "#-# column", IDC_EDTCOLUMNS, "EDIT", WS_BORDER | WS_TABSTOP, 55, 198, 46, 14
+ PUSHBUTTON "Restore P&os", IDC_PSHRESTOREPOS, 2, 215, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Cancel", IDCANCEL, 55, 215, 46, 14, WS_TABSTOP
+ PUSHBUTTON "Load", IDC_PSHLOAD, 2, 232, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Save", IDC_PSHSAVE, 2, 249, 50, 14, WS_TABSTOP
+ //COMBOBOX IDC_CMBFOLDERS, 2, 265, 97, 50, CBS_DROPDOWNLIST | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Up", IDC_RADUP, 59, 238, 25, 12, WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Down", IDC_RADDOWN, 59, 249, 31, 12
+ GROUPBOX "Direction", -1, 55, 230, 45, 33, WS_GROUP
+ AUTOCHECKBOX "Match &case", IDC_CHXMATCHCASE, 104, 158, 54, 12, WS_GROUP | NOT WS_TABSTOP
+ AUTOCHECKBOX "Whole &word", IDC_CHXWHOLEWORD, 104, 168, 54, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "S&tart word", IDC_CHXSTARTWORD, 104, 178, 56, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "Regular E&xpr", IDC_CHXREGEX, 104, 188, 57, 12
+ AUTOCHECKBOX "&Incremental", IDC_CHXINCREMENTAL, 104, 198, 57, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "S&election (NR)", IDC_CHXSELECTED, 104, 208, 68, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "Wra&p", IDC_CHXWRAP, 104, 218, 68, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "Recurse Rep&l", IDC_CHXRECURSIVE, 104, 228, 66, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "&1 per line", IDC_CHXLINE1ST, 104, 238, 66, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "&Visible Text only", IDC_CHXVISIBLE, 104, 248, 66, 12, NOT WS_TABSTOP
+ AUTOCHECKBOX "Repl &match case", IDC_CHXREPLCASE, 104, 258, 66, 12, NOT WS_TABSTOP
+ //LTEXT "Sequence", -1, 163, 162, 45, 10
+ //EDITTEXT IDC_EDTSEQUENCE, 164, 172, 17, 12, WS_BORDER | WS_TABSTOP
+ //EDITTEXT IDC_EDTCOUNTER, 185, 172, 17, 12, WS_BORDER | WS_TABSTOP
+ //RTEXT "Counter", -1, 172, 188, 32, 10
+ LTEXT "", stc1, 2, 280, 168, 12, NOT WS_GROUP | SS_NOPREFIX | WS_BORDER
+ AUTOCHECKBOX "&Autograb Find Text", IDC_CHXAUTOGRAB, 4, 3, 73, 12, WS_GROUP | WS_TABSTOP
+ COMBOBOX IDC_CMBREGEX, 78, 3, 91, 153, CBS_DROPDOWNLIST | WS_GROUP | WS_TABSTOP
+ CONTROL "", IDC_CMBFINDHISTW, "ComboBoxEx32", 3 | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 4, 19, 63, 78
+ COMBOBOX IDC_CMBFINDHISTA, 4, 19, 63, 78, CBS_DROPDOWNLIST | WS_TABSTOP | WS_GROUP
+ CONTROL "", IDC_CMBREPLHISTW, "ComboBoxEx32", 3 | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 70, 19, 63, 121
+ COMBOBOX IDC_CMBREPLHISTA, 70, 19, 63, 121, CBS_DROPDOWNLIST | WS_TABSTOP | WS_GROUP
+ PUSHBUTTON "&Swap-FR", IDC_PSHSWAP, 134, 19, 35, 14, WS_TABSTOP | WS_GROUP
+}
+// replace sequences
+// incrementing replace counters \i(start,increment,width), user settable character
+// change color for marked selection replace
+// find to list
+// find within tag
+// replace rest or count interrupt button
+// Find RegEx can match 0 characters which confuses the search tool
+// case insensitive search should be performed internally, not by Scintilla which is not multilanguage.
+// Find-Replace & Find Again works only the first time when \1 RegEx replacements. Replace Rest works fine.
+// Save selects the current folder if no previous file has been opened
+// Show Whitespace and Tab must be turned on
+// Ctrl-Alt-Up/Down should use same settings as 
+// Find + Enter often finds the current find text, the same text that was used to initiate the find
+// Enter should not close the box if [ ]Autograb is not checked
+// some long find sequences fail to find the text
+// sometimes COUNT will not return the cursor to the original position
+// base conversion
+// remove entire line where text is found
+// Find-Enter should not close if nothing is found
+// Even when nothing is marked, RestorePos should place the cursor back where it started from
+
+// rule based line finder; http://sourceforge.net/forum/forum.php?thread_id=1478717&forum_id=331753
+// rule based replace manager: http://sourceforge.net/tracker/index.php?func=detail&aid=1471584&group_id=95717&atid=612385
+// SetWindowLong needs to be SetWindowLongPtr
+// Old address needs to be stored via SetProp

@@ -1,0 +1,36 @@
+/* THIS FILE WAS ORIGINALLY BUILT BY DEV-C++ */
+#undef UNICODE
+#undef _UNICODE
+#include <windows.h>  /* include for version info constants */
+#include "enable.h"
+
+#if ENABLE_FINDREPLACE
+#include "poppad/poppad.rc"
+#endif
+
+1 VERSIONINFO
+FILEVERSION 0,2,4,0
+PRODUCTVERSION 0,2,4,0
+FILETYPE VFT_DLL
+{
+  BLOCK "StringFileInfo"
+	 {
+		 BLOCK "040904E4"
+		 {
+			 VALUE "CompanyName", "Chris Severance"
+			 VALUE "FileVersion", "0.24a"
+			 VALUE "FileDescription", "TextFX plugin for Notepad++"
+			 VALUE "InternalName", "NPPTextFX"
+			 VALUE "LegalCopyright", "(C) 2005-2007 GNU GPL"
+			 VALUE "LegalTrademarks", "http://www.gnu.org/copyleft/gpl.html"
+			 VALUE "OriginalFilename", "NPPTextFX.DLL"
+			 VALUE "ProductName", "Notepad++"
+			 VALUE "ProductVersion", "3.4-4.0"
+		 }
+	 }
+  BLOCK "VarFileInfo"
+	 {
+		 VALUE "Translation", 0x0409, 1252
+	 }
+}
+

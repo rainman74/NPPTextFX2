@@ -1,0 +1,23 @@
+Pelles-C has a high quality and fully functional debugger that will debug a DLL when debug symbols are not available for the host program. 
+
+Pelles-C does not support multiple targets so this one file is used to build the debug and release versions. The following are the settings that need to be changed.
+Compiler: NPPDEBUG=1,NPPDEBUG=0
+Linker: Debug Information: Codeview,NONE
+
+Borland C is the fastest compiler probably because it has the oldest Win32 SDK.
+
+MSVT /MD produces the smallest code. To prevent problems with missing import MSVCR71.DLL, MSVCRT.LIB is obtained from any DDK. I use the MSVCRT.LIB from the 2003 DDK and name it MSVCRT23.LIB. The normal MSVCR71.DLL based MSVCRT.LIB is preserved for programs that need it.
+
+MinGW produces very small code but does not provide an incremental linker to eliminate unused code so is not as small as MSVT. Analysis of -S assembly between Borland and MinGW shows that MinGW produces substantially better optimized code. All releases are done in MinGW. The legality of using MinGW is also very certain.
+
+I try to maintain Watcom-C, Dev-C++, and Code::Blocks projects to ensure that I'm writing ANSI compliant C that isn't dependant on certain compilers and because each has good warnings commentary however projects other than the above often trail behind allowing the project files to be missing things and the code is less tested in these compilers. 
+
+The Watcom switch set is too complex for Code::Blocks so NPPTextFXCB-WC.cbp is no longer maintained. The Watcom IDE actually works fairly well when you get used to it.
+
+Some compilers require C++ mode to compile C99 features but they do not sport a switch for it. Instead they detect from the extention. Other compilers will not compile files with a .CPP extention at all. rentoc.bat and rentocpp.bat are provided to switch back and forth. 
+
+Many options and command lines will need to be updated to get Code::Blocks to compile in all the compilers. The instructions are found Code::Blocks folders of the Notepad++ & Scintilla project.
+
+I compile in __stdcall for releases and __cdecl for debugging. This ensures that the program is not dependant on a particular calling sequence. I try to test in Windows 98, NT4, 2K, and XP to ensure that pecularities haven't crept in.
+
+\
