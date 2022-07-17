@@ -1099,7 +1099,7 @@ static BOOL PopFindFindText(LPFINDREPLACEX pfr,BOOL fReplacing) {
       if (pfr->PersistentFlags&FRP_WRAP) {
         if (pfr->PersistentFlags&FRP_UP) {
           if (epTargEnd<pfr->ep1) {
-            pfr->eprpHead=pfr->eprpTail=SENDMSGTOED(pfr->hwndEditor, SCI_GETTEXTLENGTH, 0, 0)-1;
+            pfr->eprpHead=pfr->eprpTail=SENDMSGTOED(pfr->hwndEditor, SCI_GETTEXTLENGTH, 0, 0);
             //if (!(pfr->InternalFlags&(FRI_INVISIBLE|FRI_INVISIBLEONESHOT))) SENDMSGTOED(pfr->hwndEditor, SCI_GOTOPOS, pfr->eprpHead, 0);
             continue;
           }
@@ -1360,7 +1360,7 @@ static int __cdecl PopFindReplaceCallback(unsigned uCommand,LPFINDREPLACEX pVoid
     g_hDlg=pfr->hwndSelf;
     g_wpScintillaOrigProc1=(WNDPROC)SetWindowLongPtr(GetDlgItem(pfr->hwndSelf,IDC_EDTFIND),GWLP_WNDPROC,(LONG_PTR)ScintillaSubclassProc1);
     if ((pfr->PersistentFlags&FRP_AUTOGRABFIND) && !(pfr->PersistentFlags&FRC_FINDINCREMENTAL) ) {
-      unsigned uSellen=SENDMSGTOED(pfr->hwndEditor, SCI_GETSELTEXT, 0, NULL)-1; // NUL byte not included
+      unsigned uSellen=SENDMSGTOED(pfr->hwndEditor, SCI_GETSELTEXT, 0, NULL);
       if (!uSellen) { // get current word
         unsigned epCurpos=SENDMSGTOED(pfr->hwndEditor, SCI_GETCURRENTPOS, 0, 0);
         unsigned epWord1=SENDMSGTOED(pfr->hwndEditor, SCI_WORDSTARTPOSITION, epCurpos, TRUE);
@@ -1390,7 +1390,7 @@ static int __cdecl PopFindReplaceCallback(unsigned uCommand,LPFINDREPLACEX pVoid
 		tsize_t findWhatSz = pfr->wFindWhatSz;
 		armreallocsafe(&pfr->lpstrFindWhat, &findWhatSz, uSellen + 1, ARMSTRATEGY_MAINTAIN, 0, "PopFindReplaceCallback");
 		pfr->wFindWhatSz = findWhatSz;
-		if (pfr->lpstrFindWhat) pfr->wFindWhatLen = SENDMSGTOED(pfr->hwndEditor, SCI_GETSELTEXT, 0, pfr->lpstrFindWhat) - 1;
+		if (pfr->lpstrFindWhat) pfr->wFindWhatLen = SENDMSGTOED(pfr->hwndEditor, SCI_GETSELTEXT, 0, pfr->lpstrFindWhat);
       }
     }
     int iCodePage=SENDMSGTOED(pfr->hwndEditor,SCI_GETCODEPAGE,0,0);

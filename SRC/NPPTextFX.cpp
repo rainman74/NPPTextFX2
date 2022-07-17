@@ -4756,13 +4756,13 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
     unsigned p1,p2;
     if (anchor<curpos) {p1=anchor; p2=curpos; } else {p1=curpos; p2=anchor;}
     unsigned p1line=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION, p1, 0);
-    unsigned sellen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0)-1;
+    unsigned sellen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0);
     if (sellen<1) {
       flags &= ~(CAFLAG_EXTENDTOLINES);
       if (flags & CAFLAG_GETALLWHENNOSELECTION) {
         sellen=SENDMSGTOCED(currentEdit, SCI_GETLENGTH, 0, 0);
         p1line=p1=0;
-        p2=sellen-1;
+        p2=sellen;
         /*flags &= ~ CAFLAG_GETCURLINEWHENNOSELECTION;
       } else if (flags & CAFLAG_GETCURLINEWHENNOSELECTION) {
         p1=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, p1line, 0); // p1==p2 here
@@ -4799,7 +4799,7 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
       }
       //flags &= ~CAFLAG_BLOCKMODE;
       SENDMSGTOCED(currentEdit, SCI_SETSEL, p1, p2);
-      sellen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0)-1;
+      sellen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0);
     }
     if (SENDMSGTOCED(currentEdit, SCI_SELECTIONISRECTANGLE, 0, 0)) flags |= CAFLAG_BLOCKMODE; else flags &= ~CAFLAG_BLOCKMODE;
     if (flags&CAFLAG_BLOCKMODE) {
@@ -4846,7 +4846,7 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
     unsigned rv=0,sln,slnW=0;
     if      (flags&CAFLAG_GETALLWHENNOSELECTION)     sln=SENDMSGTOCED(currentEdit, SCI_GETTEXT   , (sellen+1), tx);
     //else if (flags&CAFLAG_GETCURLINEWHENNOSELECTION){SENDMSGTOCED(currentEdit, SCI_GETCURLINE, (sellen+1), tx); sln=sellen; }
-    else                                             sln=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0         , tx)-1;
+    else                                             sln=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0         , tx);
 
 #if NPPDEBUG
     if (sln != sellen) MessageBoxFree(g_nppData._nppHandle,smprintf("Mismatch sellen:%u sln:%u",sellen,sln),PLUGIN_NAME, MB_OK|MB_ICONSTOP);
@@ -5187,7 +5187,7 @@ EXTERNC PFUNCPLUGINCMD pfinsertasciichart(void) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
   unsigned i=0,ie=255;
   unsigned chartsz=12000; // arm tools do not require us to get this number right
-  if (SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0)-1==1) {
+  if (SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, 0)==1) {
     unsigned char tx[2];
     SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, tx);
     i=ie=tx[0];
@@ -5315,8 +5315,10 @@ EXTERNC PFUNCPLUGINCMD pfhelp(void) {
 // ensure this version number matches those in the Dev-C++ version resource
 EXTERNC PFUNCPLUGINCMD pfabout(void) {
   MessageBox(g_nppData._nppHandle,
-    PLUGIN_NAME " v0.31, a Plugin for Notepad++ by Chris Severance,\r\n"// and other authors.\r\n"
+    PLUGIN_NAME " v1.0, a Plugin for Notepad++ by Chris Severance, \r\n"// and other authors.\r\n"
     "performs a variety of common conversions on selected text.\r\n"
+    "Adapted to Notepad++ 8.4.x (32 bit) and further\r\n"
+    "optimizations by Karlheinz Graf."
 #if NPPDEBUG
     "\r\nThis DEBUG edition functions exactly like the non debug but the DLL is larger and you may\r\n"
     "see error boxes pop up if any internal structures are handled incorrectly. These are the programmer's\r\n"
@@ -5355,8 +5357,8 @@ EXTERNC void MarkWordFind(int dir) {
     tr.chrg.cpMin=dir<0?p1:p2; tr.chrg.cpMax=dir<0?0:SENDMSGTOCED(currentEdit, SCI_GETLENGTH, 0, 0);
     //MessageBoxFree(g_nppData._nppHandle,smprintf("cpMin:%u cpMax:%u text:%s",tr.chrg.cpMin,tr.chrg.cpMax,tr.lpstrText),PLUGIN_NAME, MB_OK|MB_ICONINFORMATION);
     int findpos; if ((findpos=SENDMSGTOCED(currentEdit, SCI_FINDTEXT, (g_fMarkWordFindCaseSensitive?SCFIND_MATCHCASE:0)|(g_fMarkWordFindWholeWord?SCFIND_WHOLEWORD:0), &tr))!=-1) {
-      SENDMSGTOCED(currentEdit, SCI_GOTOPOS, dir<0?(findpos+sellen-1):findpos, 0);
-      SENDMSGTOCED(currentEdit, SCI_SETSEL, dir<0?(findpos+sellen-1):findpos,dir<0?findpos:(findpos+sellen-1));
+      SENDMSGTOCED(currentEdit, SCI_GOTOPOS, dir<0?(findpos+sellen):findpos, 0);
+      SENDMSGTOCED(currentEdit, SCI_SETSEL, dir<0?(findpos+sellen):findpos,dir<0?findpos:(findpos+sellen));
     } //else MessageBeep(MB_ICONHAND);
     freesafe(tr.lpstrText,"MarkWordFind");
   }
@@ -5435,8 +5437,8 @@ EXTERNC PFUNCPLUGINCMD pfinsertLongDateTime(void) {insertDateTime(DATE_LONGDATE)
 
 EXTERNC PFUNCPLUGINCMD pfDuplicateLineOrBlock(void) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
-  char *sSel; unsigned uSelLen; if (!SENDMSGTOCED(currentEdit, SCI_SELECTIONISRECTANGLE, 0, 0) && (uSelLen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0,NULL)-1)>0 && (sSel=(char *)mallocsafe(uSelLen+1,"pfDupLineDown"))) {
-    uSelLen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, sSel)-1;
+  char *sSel; unsigned uSelLen; if (!SENDMSGTOCED(currentEdit, SCI_SELECTIONISRECTANGLE, 0, 0) && (uSelLen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0,NULL))>0 && (sSel=(char *)mallocsafe(uSelLen+1,"pfDupLineDown"))) {
+    uSelLen=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, sSel);
     unsigned uAnchor=SENDMSGTOCED(currentEdit, SCI_GETSELECTIONEND, 0, 0);
     SENDMSGTOCED(currentEdit, SCI_GOTOPOS,uAnchor, 0);
     SENDMSGTOCED(currentEdit, SCI_ADDTEXT, uSelLen,sSel);
