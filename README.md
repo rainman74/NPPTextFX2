@@ -1,7 +1,7 @@
 # NPPTextFX2
 TextFX2 is a Notepad++ plugin which performs a variety of common conversions on selected text.
 
-The original project has been dead since 2008. Now Notepad++ has started to block the plugin without any notice and arbitrarily with version 8.4.3, so that it is no longer loaded.
+The original project has been dead since 2008. Now Notepad++ has started to block the plugin without any notice with version 8.4.3, so that it is no longer loaded.
 
 So I grabbed the source code with the aim to bypass the blocking. But in the process I also made some cosmetic changes that bothered me.
 
