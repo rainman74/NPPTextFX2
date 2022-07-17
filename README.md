@@ -8,7 +8,7 @@ So I grabbed the source code with the aim to bypass the blocking. But in the pro
 - Complete removal of HTML Tidy
 - Removal of no longer needed or working menus
 
-The plugin is now loaded again by Notepad++ and should you disable that again even with the new name, then I will adjust the plugin again.
+The plugin is now loaded by Notepad++ again and is also compatible with the current Scintilla.
 
 This code can be build on Visual Studio 2022 (Community Edition).
 The 64 bit version of the plugin can also be compiled, but the functions do not work in large parts.
