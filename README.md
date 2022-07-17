@@ -11,7 +11,7 @@ So I grabbed the source code with the aim to bypass the blocking. But in the pro
 The plugin is now loaded by Notepad++ again and is also compatible with the current Scintilla.
 
 This code can be build on Visual Studio 2022 (Community Edition).
-The 64 bit version of the plugin can also be compiled, but the functions do not work in large parts.
+The 64 bit version of the plugin can be compiled, but the functions do not work in large parts.
 
 Original source code for version 0.25 (dated 2008) can be fround from here:
 https://sourceforge.net/projects/npp-plugins/files/TextFX/.
