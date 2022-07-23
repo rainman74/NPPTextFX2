@@ -5315,9 +5315,9 @@ EXTERNC PFUNCPLUGINCMD pfhelp(void) {
 // ensure this version number matches those in the Dev-C++ version resource
 EXTERNC PFUNCPLUGINCMD pfabout(void) {
   MessageBox(g_nppData._nppHandle,
-    PLUGIN_NAME " v1.0, a Plugin for Notepad++ by Chris Severance, \r\n"// and other authors.\r\n"
+    PLUGIN_NAME " v1.01, a Plugin for Notepad++ by Chris Severance, \r\n"// and other authors.\r\n"
     "performs a variety of common conversions on selected text.\r\n"
-    "Adapted to Notepad++ 8.4.x (32 bit) and further\r\n"
+    "Adapted to Notepad++ v8+ and further\r\n"
     "optimizations by Karlheinz Graf."
 #if NPPDEBUG
     "\r\nThis DEBUG edition functions exactly like the non debug but the DLL is larger and you may\r\n"
