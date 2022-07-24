@@ -1,1 +1,0 @@
-#define NPPDEBUG 0

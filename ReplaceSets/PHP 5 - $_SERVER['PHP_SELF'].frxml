@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="Windows-1252"?>
-<!--Upgrade $PHP_SELF to $_SERVER['PHP_SELF'] -->
-<TextFX:Replace option:MatchCase="0" option:WholeWord="1" option:WordStart="0" option:RegEx="0" option:RecursiveReplace="0" option:FirstOnLine="0" option:VisibleTextOnly="0" option:ReplaceMatchCase="0">
-	<FindText>/$PHP_SELF/</FindText>
-	<ReplaceText>/$_SERVER[’PHP_SELF’]/</ReplaceText>
-</TextFX:Replace>
