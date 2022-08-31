@@ -5315,7 +5315,7 @@ EXTERNC PFUNCPLUGINCMD pfhelp(void) {
 // ensure this version number matches those in the Dev-C++ version resource
 EXTERNC PFUNCPLUGINCMD pfabout(void) {
   MessageBox(g_nppData._nppHandle,
-    PLUGIN_NAME " v1.02, a Plugin for Notepad++ by Chris Severance, \r\n"// and other authors.\r\n"
+    PLUGIN_NAME ", a Plugin for Notepad++ by Chris Severance, \r\n"// and other authors.\r\n"
     "performs a variety of common conversions on selected text.\r\n"
     "Adapted to Notepad++ v8+ and further\r\n"
     "optimizations by Karlheinz Graf."
@@ -7077,14 +7077,18 @@ struct FuncItem funcItem[]={
 {NPPTEXT("Escape ' to \\'"),pfconvertescape1qs1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape ' to \\\""),pfconvertescape1qsq,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape both \"&&' to \\\"&&\\'"),pfconvertescapeboth,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#ifdef X86
 {NPPTEXT("unEscape \\\" to \""),pfconvertunescapesq,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \\' to '"),pfconvertunescapes1q1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \\\" to '"),pfconvertunescapesq1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape both \\\"&&\\' to \"&&'"),pfconvertunescapeboth,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#endif
 {NPPTEXT("Escape \" to \"\""),pfconvertescape2q22q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape ' to \"\""),pfconvertescape1q22q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#ifdef X86
 {NPPTEXT("unEscape \"\" to \""),pfconvertunescape22q2q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \"\" to '"),pfconvertunescape22q1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#endif
 {NPPTEXT("-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("UPPER CASE"),pfconvertuppercase,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("lower case"),pfconvertlowercase,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7120,6 +7124,7 @@ struct FuncItem funcItem[]={
 #endif
 //{NPPTEXT("V:Show/Hide 'All' Set Line Range"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)}, // proposed
 //{NPPTEXT("V:Show/Hide 'All' Clear Range"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)}, // proposed
+#ifdef X86
 {NPPTEXT("V:Show Between-Selected or All-Reset Lines"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("V:Hide Between-Selected or All-Reset Lines"),pfvizhideselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("V:Invert Visibility Between-Selected or All Lines"),pfvizinvertselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7189,12 +7194,13 @@ struct FuncItem funcItem[]={
 {NPPTEXT("E:ReWrap Text to (Clipboard or 72) width"),pfrewraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("E:Extend selection as rectangular to end of file"),pfextendblock,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("E:Pad rectangular selection with spaces"),pfextendblockspaces,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#endif
 {NPPTEXT("C:Encode URI Component"),pfencodeURIcomponent,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Encode HTML (&&<>\")"),pfencodeHTML,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Strip HTML tags table tabs"),pfstripHTMLtags,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Strip HTML tags table nontabs"),pfstripHTMLnotabs,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("C:Submit to W3C HTML Validator"),pfsubmitHTML,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("C:Submit to W3C CSS Validator"),pfsubmitCSS,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("C:Submit to W3C HTML Validator"),pfsubmitHTML,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("C:Submit to W3C CSS Validator"),pfsubmitCSS,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Convert text to code command(\"text=\\\"value\\\"\");"),pfprepostpendlines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Convert Decimal Number to Binary"),pfdecimal2binary,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7224,32 +7230,34 @@ struct FuncItem funcItem[]={
 {NPPTEXT("T:+Sort outputs only UNIQUE (at column) lines"),pfSortLinesUnique,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Insert Ascii Chart or Character"),pfinsertasciichart,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#ifdef X86
 {NPPTEXT("T:Insert Ruler"),pfinsertruler,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+#endif
 {NPPTEXT("T:Insert Line Numbers"),pfinsertlinenumbers,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Delete Line Numbers or First Word"),pfdeletefirstword,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("T:Clean eMail >Quoting"),pfcleanemailquoting,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("T:Clean eMail >Quoting"),pfcleanemailquoting,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:UUdecode"),pfuudecode,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Base64 Decode"),pfbase64decode,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Word Count"),pfwordcount,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Add up numbers"),pfaddup,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Empty Undo Buffer (be sure to save)"),pfemptyundobuffer,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("I:Current Full Path"),pfinsertCurrentFullPath,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("I:Current File Name"),pfinsertCurrentFileName,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("I:Current Directory"),pfinsertCurrentDirectory,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("I:Current Full Path"),pfinsertCurrentFullPath,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("I:Current File Name"),pfinsertCurrentFileName,0,FALSE NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("I:Current Directory"),pfinsertCurrentDirectory,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("I:Date && Time - short format"),pfinsertShortDateTime,0,FALSE NPPPLUGINACCELERATOR(/*&skinsertShortDateTime*/NULL)},
 {NPPTEXT("I:Date && Time - long format"),pfinsertLongDateTime,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 #ifndef HighPerformance
 {NPPTEXT("S:+Go Faster, use more memory"),pfHighPerformance,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 #endif
 {NPPTEXT("S:+Cancel Overwrite Mode moving from current line"),pfBlockOverwrite,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("S:+Autoclose XHTML/XML <Tag>"),pfAutoCloseHTMLtag,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("S:+Autoclose {([Brace"),pfAutoCloseBrace,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
-{NPPTEXT("S:+Autoconvert typed leading spaces to tabs"),pfAutoSpace2Tab,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("S:+Autoclose XHTML/XML <Tag>"),pfAutoCloseHTMLtag,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("S:+Autoclose {([Brace"),pfAutoCloseBrace,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("S:+Autoconvert typed leading spaces to tabs"),pfAutoSpace2Tab,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 #if ENABLE_AutoShowMatchline
 {NPPTEXT("S:+Autoshow line matching Brace])}"),pfAutoShowMatchline,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 #endif
-{NPPTEXT("S:+Autoconvert typed HTML/XML to &&entities;"),pfAutoConvertHTML,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
+//{NPPTEXT("S:+Autoconvert typed HTML/XML to &&entities;"),pfAutoConvertHTML,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("S:+Disable Subclassing && advanced features"),pfDisableSubclassing,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("S:+Move quick menus out of 'Plugins' menu"),pfSeparateQuickMenus,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 #if ENABLE_WrapFriendlyHomeEnd

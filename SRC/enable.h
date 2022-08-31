@@ -28,3 +28,4 @@
 #define ENABLE_FINDREPLACE 0
 #define ENABLE_WrapFriendlyHomeEnd 0
 #define ENABLE_AutoShowMatchline 0
+#define X86 1
