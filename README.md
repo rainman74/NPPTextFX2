@@ -16,14 +16,15 @@ The 64 bit version of the plugin can be compiled, but the functions do not work 
 Original source code for version 0.25 (dated 2008) can be fround from here:
 https://sourceforge.net/projects/npp-plugins/files/TextFX/.
 
-Installation instructions:
+
+# Installation instructions:
 
 A Notepad++ plugin must always be located in a separate folder with the same name as the DLL, otherwise it will not be loaded.
 
 Examples:
 
-\Notepad++\plugins\NppTextFX64\NppTextFX64.dll (64 bit version)
-\Notepad++\plugins\NppTextFX\NppTextFX.dll (32 bit version)
-\Notepad++\plugins\myFunnyPlugin123\myFunnyPlugin123.dll
+- \Notepad++\plugins\NppTextFX64\NppTextFX64.dll (64 bit version)
+- \Notepad++\plugins\NppTextFX\NppTextFX.dll (32 bit version)
+- \Notepad++\plugins\myFunnyPlugin123\myFunnyPlugin123.dll
 
 You can also rename the 64 bit plugin to NppTextFX.dll, then the folder name must be the same as for the 32 bit plugin.
