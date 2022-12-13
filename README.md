@@ -17,6 +17,7 @@ Original source code for version 0.25 (dated 2008) can be fround from here:
 https://sourceforge.net/projects/npp-plugins/files/TextFX/.
 
 Installation instructions:
+
 A Notepad++ plugin must always be located in a separate folder with the same name as the DLL, otherwise it will not be loaded.
 
 Examples:
