@@ -1,0 +1,46 @@
+name: CI_build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        build_configuration: [Release Unicode, Debug Unicode, Release]
+        build_platform: [x64, Win32]
+        
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1
+
+    - name: MSBuild of plugin dll
+      working-directory: VC\
+      run: msbuild TextFX.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="v143"
+
+    - name: Archive artifacts for x64
+      if: matrix.build_platform == 'x64' && matrix.build_configuration == 'Release Unicode'
+      uses: actions/upload-artifact@v3
+      with:
+          name: plugin_dll_x64
+          path: VC\NppTextFX64.dll
+
+    - name: Archive artifacts for Win32
+      if: matrix.build_platform == 'Win32' && matrix.build_configuration == 'Release Unicode'
+      uses: actions/upload-artifact@v3
+      with:
+          name: plugin_dll_x86
+          path: VC\NppTextFX.dll
+
+    - name: Archive artifacts for ARM64
+      if: matrix.build_platform == 'ARM64' && matrix.build_configuration == 'Release Unicode'
+      uses: actions/upload-artifact@v3
+      with:
+          name: plugin_dll_arm64
+          path: VC\TextFX.dll
