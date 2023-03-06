@@ -12,8 +12,8 @@
 #endif
 
 1 VERSIONINFO
-FILEVERSION 1,2,0,0
-PRODUCTVERSION 1,2,0,0
+FILEVERSION 1,3,0,0
+PRODUCTVERSION 1,3,0,0
 FILETYPE VFT_DLL
 {
   BLOCK "StringFileInfo"
@@ -21,14 +21,14 @@ FILETYPE VFT_DLL
 		 BLOCK "040904E4"
 		 {
 			 VALUE "CompanyName", "Chris Severance"
-			 VALUE "FileVersion", "1.2"
+			 VALUE "FileVersion", "1.3"
 			 VALUE "FileDescription", "TextFX plugin for Notepad++"
 			 VALUE "InternalName", "NPPTextFX"
 			 VALUE "LegalCopyright", "(C) 2005-2022 GNU GPL"
 			 VALUE "LegalTrademarks", "http://www.gnu.org/copyleft/gpl.html"
 			 VALUE "OriginalFilename", "NPPTextFX.DLL"
 			 VALUE "ProductName", "NPPTextFX"
-			 VALUE "ProductVersion", "1.2"
+			 VALUE "ProductVersion", "1.3"
 		 }
 	 }
   BLOCK "VarFileInfo"
@@ -36,3 +36,4 @@ FILETYPE VFT_DLL
 		 VALUE "Translation", 0x0409, 1252
 	 }
 }
+
