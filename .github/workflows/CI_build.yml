@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        build_configuration: [Release Unicode, Debug Unicode, Release]
-        build_platform: [x64, Win32]
+        build_configuration: [Release Unicode, Debug Unicode]
+        build_platform: [x64, Win32, ARM64]
         
     steps:
     - name: Checkout repo
@@ -24,23 +24,33 @@ jobs:
       working-directory: VC\
       run: msbuild TextFX.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="v143"
 
-    - name: Archive artifacts for x64
+    - uses: olegtarasov/get-tag@v2.1.2
+      id: tagName
+
+    - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'x64' && matrix.build_configuration == 'Release Unicode'
       uses: actions/upload-artifact@v3
       with:
-          name: plugin_dll_x64
+          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
           path: VC\NppTextFX64.dll
 
-    - name: Archive artifacts for Win32
+    - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'Win32' && matrix.build_configuration == 'Release Unicode'
       uses: actions/upload-artifact@v3
       with:
-          name: plugin_dll_x86
+          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
           path: VC\NppTextFX.dll
 
-    - name: Archive artifacts for ARM64
+    - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'ARM64' && matrix.build_configuration == 'Release Unicode'
       uses: actions/upload-artifact@v3
       with:
-          name: plugin_dll_arm64
-          path: VC\TextFX.dll
+          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
+          path: VC\${{ matrix.build_platform }}\${{ matrix.build_configuration }}\NppTextFX64.dll
+
+    - name: Create release on tagging
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+          files: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
+
