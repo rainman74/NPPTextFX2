@@ -36,4 +36,3 @@ FILETYPE VFT_DLL
 		 VALUE "Translation", 0x0409, 1252
 	 }
 }
-
