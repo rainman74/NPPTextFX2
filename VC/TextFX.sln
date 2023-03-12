@@ -7,16 +7,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextFX2", "TextFX.vcxproj",
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Unicode|ARM64 = Debug Unicode|ARM64
 		Debug Unicode|x64 = Debug Unicode|x64
 		Debug Unicode|x86 = Debug Unicode|x86
+		Release Unicode|ARM64 = Release Unicode|ARM64
 		Release Unicode|x64 = Release Unicode|x64
 		Release Unicode|x86 = Release Unicode|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|ARM64.ActiveCfg = Release|ARM64
+		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|ARM64.Build.0 = Release|ARM64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|x64.ActiveCfg = Debug Unicode|x64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|x64.Build.0 = Debug Unicode|x64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|x86.ActiveCfg = Debug Unicode|Win32
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Debug Unicode|x86.Build.0 = Debug Unicode|Win32
+		{7B3DDD96-26BC-4040-B041-4437E3170065}.Release Unicode|ARM64.ActiveCfg = Release Unicode|ARM64
+		{7B3DDD96-26BC-4040-B041-4437E3170065}.Release Unicode|ARM64.Build.0 = Release Unicode|ARM64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Release Unicode|x64.ActiveCfg = Release Unicode|x64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Release Unicode|x64.Build.0 = Release Unicode|x64
 		{7B3DDD96-26BC-4040-B041-4437E3170065}.Release Unicode|x86.ActiveCfg = Release Unicode|Win32
