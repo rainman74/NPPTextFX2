@@ -29,21 +29,21 @@ jobs:
 
     - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'x64' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
           path: VC\NppTextFX64.dll
 
     - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'Win32' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
           path: VC\NppTextFX.dll
 
     - name: Archive artifacts for ${{ matrix.build_platform }}
       if: matrix.build_platform == 'ARM64' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
           name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
           path: VC\${{ matrix.build_platform }}\${{ matrix.build_configuration }}\NppTextFX64.dll
