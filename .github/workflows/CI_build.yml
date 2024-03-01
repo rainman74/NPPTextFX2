@@ -24,7 +24,7 @@ jobs:
       working-directory: VC\
       run: msbuild TextFX.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="v143"
 
-    - uses: olegtarasov/get-tag@v2.1.2
+    - uses: olegtarasov/get-tag@2.1.3
       id: tagName
 
     - name: Archive artifacts for ${{ matrix.build_platform }}
