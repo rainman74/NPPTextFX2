@@ -6783,6 +6783,33 @@ EXTERNC PFUNCPLUGINCMD pfbuildmenu(void) {
   if (mx.szBuf) freesafe(mx.szBuf,"pfbuildmenu");
 }
 
+EXTERNC PFUNCPLUGINCMD pfstripmenuprefixes(void) {
+  MENUITEMINFOA mi;
+  unsigned runonce;
+  char szLabel[nbChar];
+
+  ZeroMemory(&mi,sizeof(mi));
+  mi.cbSize=cbMENUITEMINFO;
+  mi.fMask=MIIM_TYPE;
+  for(runonce=0; runonce<NELEM(funcItem); runonce++) {
+    char *label=funcItem[runonce]._itemName;
+    if (label[0] && label[1]==':') label+=2;
+
+    if (label[0]=='-') {
+      mi.fType=MFT_SEPARATOR;
+      mi.dwTypeData=NULL;
+      mi.cch=0;
+    } else {
+      mi.fType=MFT_STRING;
+      strncpy(szLabel,label,NELEM(szLabel)-1);
+      szLabel[NELEM(szLabel)-1]='\0';
+      mi.dwTypeData=szLabel;
+      mi.cch=strlen(szLabel);
+    }
+    SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),funcItem[runonce]._cmdID,FALSE,&mi);
+  }
+}
+
 // As we write this and other programs, we think of needed features and list them here.
 // Features that are pretty easy:
 //  new feature: text to decimal, decimal to text
@@ -7378,8 +7405,7 @@ if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
   if (!runonce && g_fLoadonce) {
     pfbuildmenu();
-    MENUITEMINFO miosep={sizeof(MENUITEMINFO),MIIM_TYPE,MFT_SEPARATOR,0,0,0,0,0,0,NULL,0};
-    for(runonce=0; runonce<NELEM(funcItem); runonce++) if (funcItem[runonce]._itemName[0]=='-') SetMenuItemInfo(GetMenu(g_nppData._nppHandle),funcItem[runonce]._cmdID,FALSE,&miosep);
+    pfstripmenuprefixes();
 #if ENABLE_TIDYDLL
     control_tidy(FALSE);
 #endif
