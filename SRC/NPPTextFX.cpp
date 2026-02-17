@@ -3669,20 +3669,21 @@ failbreak:
 EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
 #define lnew 0
   unsigned n=0,lold;
-  char *d,*dp,*end;
+  char *d,*lineend,*trimstart,*end;
   if (dest) {
     for(d=dest,end=dest+*destlen;d<end; ) {
-      dp=d;
-      d=memcspn(d,end,"\r\n",2);
-      for(d--,lold=0; d>=dp && *d==' '; d--, lold++);
-      d++;
+      lineend=memcspn(d,end,"\r\n",2);
+      trimstart=lineend;
+      while(trimstart>d && (trimstart[-1]==' ' || trimstart[-1]=='\t')) trimstart--;
+      lold=(unsigned)(lineend-trimstart);
       if (lnew != lold) {
-        memmovetest(d+lnew,d+lold,*destlen-(d-dest)-lold+1);
+        memmove(trimstart+lnew,lineend,*destlen-(unsigned)(lineend-dest));
         *destlen += lnew-lold;
         end += lnew-lold;
         n++;
+        lineend=trimstart;
       }
-      d=memspn(d,end,"\r\n",2);
+      d=memspn(lineend,end,"\r\n",2);
     }
   }
   return(n);
@@ -4826,8 +4827,14 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
       lpe=(unsigned *)mallocsafe(blocklines*sizeof(*lpe),"convertall-bloclines"); if (!lpe) break;
       unsigned ln; for(ln=0; ln<blocklines; ln++) {
         unsigned lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
-        lps[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0)-lbof;
-        lpe[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0)-lbof;
+        Sci_Position ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0);
+        Sci_Position le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0);
+        if (INVALID_POSITION==ls || INVALID_POSITION==le || le<ls) {
+          lps[ln]=lpe[ln]=0;
+        } else {
+          lps[ln]=(unsigned)(ls-lbof);
+          lpe[ln]=(unsigned)(le-lbof);
+        }
       }
     }
     // this could be recoded to convert a line at a time but issues such as long line length
@@ -4954,8 +4961,7 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
               SENDMSGTOCED(currentEdit, SCI_REPLACETARGET, chn, d);
             }
             d += chn;
-            if ((d[0]=='\r' && d[1]=='\n') || (d[0]=='\n' && d[1]=='\r')) d+=2;
-            else if (d[0]=='\r' || d[0]=='\n') d++;
+            d = memspn(d,end,"\r\n",2);
           }
           /*curpos = lpe[blocklines-1]+SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, p1line+blocklines-1, 0);
           if (curpos<anchor) curpos=anchor+1; // carefully constructed cases can push anchor ahead of curpos
@@ -4963,7 +4969,8 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
           SENDMSGTOCED(currentEdit, SCI_SETSELECTIONMODE,SC_SEL_RECTANGLE, 0);
           SENDMSGTOCED(currentEdit, SCI_SETCURRENTPOS,(flags&CAFLAG_LESS)?anchor:curpos, 0);*/
         } else {
-          p2 += sln-sellen;
+          if (sln>=sellen) p2 += sln-sellen;
+          else             p2 -= sellen-sln;
           if (rv) {
             if (flags&CAFLAG_GETALLWHENNOSELECTION) {
               SENDMSGTOCED(currentEdit, SCI_SETTEXT, 0, "");
@@ -5862,7 +5869,11 @@ EXTERNC void detectprplist(void) {
 EXTERNC void adjustprplist(INT_CURRENTEDIT,unsigned curpos) {
   unsigned t1=SENDMSGTOCED(currentEdit, SCI_GETLENGTH,0,0);
   if (g_PopLists[g_uPopListNo].poptextlen) {
-    unsigned i; for(i=0; i<g_PopLists[g_uPopListNo].popcount; i++) if (g_PopLists[g_uPopListNo].poplist[i]>curpos) g_PopLists[g_uPopListNo].poplist[i]+=t1-g_PopLists[g_uPopListNo].poptextlen;
+    unsigned i; for(i=0; i<g_PopLists[g_uPopListNo].popcount; i++) if (g_PopLists[g_uPopListNo].poplist[i]>curpos) {
+      if (t1>=g_PopLists[g_uPopListNo].poptextlen) g_PopLists[g_uPopListNo].poplist[i]+=t1-g_PopLists[g_uPopListNo].poptextlen;
+      else if (g_PopLists[g_uPopListNo].poplist[i]>=g_PopLists[g_uPopListNo].poptextlen-t1) g_PopLists[g_uPopListNo].poplist[i]-=g_PopLists[g_uPopListNo].poptextlen-t1;
+      else g_PopLists[g_uPopListNo].poplist[i]=0;
+    }
   }
   g_PopLists[g_uPopListNo].poptextlen=t1;
 }
