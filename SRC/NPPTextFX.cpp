@@ -4826,14 +4826,16 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
       lps=(unsigned *)mallocsafe(blocklines*sizeof(*lps),"convertall-bloclines"); if (!lps) break;
       lpe=(unsigned *)mallocsafe(blocklines*sizeof(*lpe),"convertall-bloclines"); if (!lpe) break;
       unsigned ln; for(ln=0; ln<blocklines; ln++) {
-        unsigned lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
+        Sci_Position lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
+        Sci_Position leof=SENDMSGTOCED(currentEdit, SCI_GETLINEENDPOSITION, (p1line+ln),0);
         Sci_Position ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0);
         Sci_Position le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0);
-        if (INVALID_POSITION==ls || INVALID_POSITION==le || le<ls) {
+        if (INVALID_POSITION==ls || INVALID_POSITION==le || le<ls || ls<lbof || le<lbof) {
           lps[ln]=lpe[ln]=0;
         } else {
-          lps[ln]=(unsigned)(ls-lbof);
-          lpe[ln]=(unsigned)(le-lbof);
+          unsigned maxofs=(leof>=lbof)?(unsigned)(leof-lbof):0;
+          lps[ln]=(unsigned)(ls-lbof); if (lps[ln]>maxofs) lps[ln]=maxofs;
+          lpe[ln]=(unsigned)(le-lbof); if (lpe[ln]>maxofs) lpe[ln]=maxofs;
         }
       }
     }
@@ -4952,14 +4954,21 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
           for(ln=0,d=tx,end=d+sln; ln<blocklines && d<end; ln++) {
             unsigned chn=memcspn(d,tx+sln,"\r\n",2)-d;
             if (lpe[ln]>lps[ln]) {
-              int lbof= SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, (p1line+ln),0);
+              Sci_Position lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, (p1line+ln),0);
+              Sci_Position leof=SENDMSGTOCED(currentEdit, SCI_GETLINEENDPOSITION, (p1line+ln),0);
+              unsigned maxofs=(leof>=lbof)?(unsigned)(leof-lbof):0;
+              unsigned lps1=lps[ln],lpe1=lpe[ln];
+              if (lps1>maxofs) lps1=maxofs;
+              if (lpe1>maxofs) lpe1=maxofs;
+              if (lpe1<=lps1) goto skipeol;
               //SENDMSGTOCED(currentEdit, SCI_SETSEL, (lps[ln]+lbof), (lpe[ln]+lbof));
               //if (rv) SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, "");
               //if (rv) SENDMSGTOCED(currentEdit, SCI_ADDTEXT, chn, d);
-              SENDMSGTOCED(currentEdit, SCI_SETTARGETSTART, lps[ln]+lbof, 0);
-              SENDMSGTOCED(currentEdit, SCI_SETTARGETEND, lpe[ln]+lbof,0);
+              SENDMSGTOCED(currentEdit, SCI_SETTARGETSTART, lps1+lbof, 0);
+              SENDMSGTOCED(currentEdit, SCI_SETTARGETEND, lpe1+lbof,0);
               SENDMSGTOCED(currentEdit, SCI_REPLACETARGET, chn, d);
             }
+skipeol:
             d += chn;
             d = memspn(d,end,"\r\n",2);
           }
