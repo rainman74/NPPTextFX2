@@ -3696,28 +3696,35 @@ EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
 
 // http://www.crimsoneditor.com/english/board/CrazyWWWBoard.cgi?db=forum&mode=read&num=2339&page=161&ftype=6&fval=&backdepth=1
 EXTERNC unsigned deleteblanklines(char *dest,unsigned *destlen,unsigned surplus) {
-#define lnew 0
-  unsigned n=0,lold;
+  unsigned n=0;
   char *d,*end;
-  unsigned surplus1;
-  if (dest && surplus>=1) {
-    for(d=dest,end=dest+*destlen;d<end; ) {
+  if (dest && destlen && surplus>=1) {
+    for(d=dest,end=dest+*destlen; d<end; ) {
+      unsigned kept;
+      unsigned remove_len;
+      size_t tail_len;
+      char *remove_start,*remove_end;
+
       d=memcspn(d,end,"\r\n",2);
-      for(surplus1=surplus; d<end && surplus1; surplus1--) {
-        if (*d=='\r' && d[1]=='\n') d+=2;
+
+      for(kept=0; d<end && kept<surplus; kept++) {
+        if (*d=='\r' && d+1<end && d[1]=='\n') d+=2;
         else d++;
       }
-      lold=memspn(d,end,"\r\n",2)-d;
-      if (lnew != lold) {
-        memmovetest(d+lnew,d+lold,*destlen-(d-dest)-lold+1);
-        *destlen += lnew-lold;
-        end += lnew-lold;
+
+      remove_start=d;
+      remove_end=memspn(remove_start,end,"\r\n",2);
+      remove_len=(unsigned)(remove_end-remove_start);
+      if (remove_len) {
+        tail_len=(size_t)(*destlen-(unsigned)(remove_end-dest));
+        memmove(remove_start,remove_end,tail_len);
+        *destlen -= remove_len;
+        end -= remove_len;
         n++;
       }
     }
   }
   return(n);
-#undef lnew
 }
 
 #if 0
