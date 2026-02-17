@@ -3667,27 +3667,31 @@ failbreak:
 }
 
 EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
-#define lnew 0
-  unsigned n=0,lold;
+  unsigned n=0;
   char *d,*lineend,*trimstart,*end;
-  if (dest) {
-    for(d=dest,end=dest+*destlen;d<end; ) {
+  if (dest && destlen) {
+    for(d=dest,end=dest+*destlen; d<end; ) {
+      unsigned remove_len;
+      size_t tail_len;
+
       lineend=memcspn(d,end,"\r\n",2);
       trimstart=lineend;
       while(trimstart>d && (trimstart[-1]==' ' || trimstart[-1]=='\t')) trimstart--;
-      lold=(unsigned)(lineend-trimstart);
-      if (lnew != lold) {
-        memmove(trimstart+lnew,lineend,*destlen-(unsigned)(lineend-dest));
-        *destlen += lnew-lold;
-        end += lnew-lold;
-        n++;
+
+      remove_len=(unsigned)(lineend-trimstart);
+      if (remove_len) {
+        tail_len=(size_t)(*destlen-(unsigned)(lineend-dest));
+        memmove(trimstart,lineend,tail_len);
+        *destlen -= remove_len;
+        end -= remove_len;
         lineend=trimstart;
+        n++;
       }
+
       d=memspn(lineend,end,"\r\n",2);
     }
   }
   return(n);
-#undef lnew
 }
 
 // http://www.crimsoneditor.com/english/board/CrazyWWWBoard.cgi?db=forum&mode=read&num=2339&page=161&ftype=6&fval=&backdepth=1
