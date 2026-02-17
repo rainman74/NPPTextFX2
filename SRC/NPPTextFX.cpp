@@ -3669,20 +3669,21 @@ failbreak:
 EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
 #define lnew 0
   unsigned n=0,lold;
-  char *d,*dp,*end;
+  char *d,*lineend,*trimstart,*end;
   if (dest) {
     for(d=dest,end=dest+*destlen;d<end; ) {
-      dp=d;
-      d=memcspn(d,end,"\r\n",2);
-      for(d--,lold=0; d>=dp && *d==' '; d--, lold++);
-      d++;
+      lineend=memcspn(d,end,"\r\n",2);
+      trimstart=lineend;
+      while(trimstart>d && trimstart[-1]==' ') trimstart--;
+      lold=(unsigned)(lineend-trimstart);
       if (lnew != lold) {
-        memmovetest(d+lnew,d+lold,*destlen-(d-dest)-lold+1);
+        memmove(trimstart+lnew,lineend,*destlen-(unsigned)(lineend-dest));
         *destlen += lnew-lold;
         end += lnew-lold;
         n++;
+        lineend=trimstart;
       }
-      d=memspn(d,end,"\r\n",2);
+      d=memspn(lineend,end,"\r\n",2);
     }
   }
   return(n);
