@@ -7,3 +7,4 @@
 /VC/*.dll
 /VC/*.pdb
 /VC/*.user
+/x64.patch
