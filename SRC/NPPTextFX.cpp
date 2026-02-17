@@ -3669,20 +3669,21 @@ failbreak:
 EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
 #define lnew 0
   unsigned n=0,lold;
-  char *d,*dp,*end;
+  char *d,*lineend,*trimstart,*end;
   if (dest) {
     for(d=dest,end=dest+*destlen;d<end; ) {
-      dp=d;
-      d=memcspn(d,end,"\r\n",2);
-      for(d--,lold=0; d>=dp && *d==' '; d--, lold++);
-      d++;
+      lineend=memcspn(d,end,"\r\n",2);
+      trimstart=lineend;
+      while(trimstart>d && (trimstart[-1]==' ' || trimstart[-1]=='\t')) trimstart--;
+      lold=(unsigned)(lineend-trimstart);
       if (lnew != lold) {
-        memmovetest(d+lnew,d+lold,*destlen-(d-dest)-lold+1);
+        memmove(trimstart+lnew,lineend,*destlen-(unsigned)(lineend-dest));
         *destlen += lnew-lold;
         end += lnew-lold;
         n++;
+        lineend=trimstart;
       }
-      d=memspn(d,end,"\r\n",2);
+      d=memspn(lineend,end,"\r\n",2);
     }
   }
   return(n);
@@ -4825,9 +4826,17 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
       lps=(unsigned *)mallocsafe(blocklines*sizeof(*lps),"convertall-bloclines"); if (!lps) break;
       lpe=(unsigned *)mallocsafe(blocklines*sizeof(*lpe),"convertall-bloclines"); if (!lpe) break;
       unsigned ln; for(ln=0; ln<blocklines; ln++) {
-        unsigned lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
-        lps[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0)-lbof;
-        lpe[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0)-lbof;
+        Sci_Position lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
+        Sci_Position leof=SENDMSGTOCED(currentEdit, SCI_GETLINEENDPOSITION, (p1line+ln),0);
+        Sci_Position ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0);
+        Sci_Position le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0);
+        if (INVALID_POSITION==ls || INVALID_POSITION==le || le<ls || ls<lbof || le<lbof) {
+          lps[ln]=lpe[ln]=0;
+        } else {
+          unsigned maxofs=(leof>=lbof)?(unsigned)(leof-lbof):0;
+          lps[ln]=(unsigned)(ls-lbof); if (lps[ln]>maxofs) lps[ln]=maxofs;
+          lpe[ln]=(unsigned)(le-lbof); if (lpe[ln]>maxofs) lpe[ln]=maxofs;
+        }
       }
     }
     // this could be recoded to convert a line at a time but issues such as long line length
@@ -4945,17 +4954,23 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
           for(ln=0,d=tx,end=d+sln; ln<blocklines && d<end; ln++) {
             unsigned chn=memcspn(d,tx+sln,"\r\n",2)-d;
             if (lpe[ln]>lps[ln]) {
-              int lbof= SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, (p1line+ln),0);
+              Sci_Position lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, (p1line+ln),0);
+              Sci_Position leof=SENDMSGTOCED(currentEdit, SCI_GETLINEENDPOSITION, (p1line+ln),0);
+              unsigned maxofs=(leof>=lbof)?(unsigned)(leof-lbof):0;
+              unsigned lps1=lps[ln],lpe1=lpe[ln];
+              if (lps1>maxofs) lps1=maxofs;
+              if (lpe1>maxofs) lpe1=maxofs;
+              if (lpe1<=lps1) goto skipeol;
               //SENDMSGTOCED(currentEdit, SCI_SETSEL, (lps[ln]+lbof), (lpe[ln]+lbof));
               //if (rv) SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, "");
               //if (rv) SENDMSGTOCED(currentEdit, SCI_ADDTEXT, chn, d);
-              SENDMSGTOCED(currentEdit, SCI_SETTARGETSTART, lps[ln]+lbof, 0);
-              SENDMSGTOCED(currentEdit, SCI_SETTARGETEND, lpe[ln]+lbof,0);
+              SENDMSGTOCED(currentEdit, SCI_SETTARGETSTART, lps1+lbof, 0);
+              SENDMSGTOCED(currentEdit, SCI_SETTARGETEND, lpe1+lbof,0);
               SENDMSGTOCED(currentEdit, SCI_REPLACETARGET, chn, d);
             }
+skipeol:
             d += chn;
-            if ((d[0]=='\r' && d[1]=='\n') || (d[0]=='\n' && d[1]=='\r')) d+=2;
-            else if (d[0]=='\r' || d[0]=='\n') d++;
+            d = memspn(d,end,"\r\n",2);
           }
           /*curpos = lpe[blocklines-1]+SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, p1line+blocklines-1, 0);
           if (curpos<anchor) curpos=anchor+1; // carefully constructed cases can push anchor ahead of curpos
@@ -4963,7 +4978,8 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
           SENDMSGTOCED(currentEdit, SCI_SETSELECTIONMODE,SC_SEL_RECTANGLE, 0);
           SENDMSGTOCED(currentEdit, SCI_SETCURRENTPOS,(flags&CAFLAG_LESS)?anchor:curpos, 0);*/
         } else {
-          p2 += sln-sellen;
+          if (sln>=sellen) p2 += sln-sellen;
+          else             p2 -= sellen-sln;
           if (rv) {
             if (flags&CAFLAG_GETALLWHENNOSELECTION) {
               SENDMSGTOCED(currentEdit, SCI_SETTEXT, 0, "");
@@ -5862,7 +5878,11 @@ EXTERNC void detectprplist(void) {
 EXTERNC void adjustprplist(INT_CURRENTEDIT,unsigned curpos) {
   unsigned t1=SENDMSGTOCED(currentEdit, SCI_GETLENGTH,0,0);
   if (g_PopLists[g_uPopListNo].poptextlen) {
-    unsigned i; for(i=0; i<g_PopLists[g_uPopListNo].popcount; i++) if (g_PopLists[g_uPopListNo].poplist[i]>curpos) g_PopLists[g_uPopListNo].poplist[i]+=t1-g_PopLists[g_uPopListNo].poptextlen;
+    unsigned i; for(i=0; i<g_PopLists[g_uPopListNo].popcount; i++) if (g_PopLists[g_uPopListNo].poplist[i]>curpos) {
+      if (t1>=g_PopLists[g_uPopListNo].poptextlen) g_PopLists[g_uPopListNo].poplist[i]+=t1-g_PopLists[g_uPopListNo].poptextlen;
+      else if (g_PopLists[g_uPopListNo].poplist[i]>=g_PopLists[g_uPopListNo].poptextlen-t1) g_PopLists[g_uPopListNo].poplist[i]-=g_PopLists[g_uPopListNo].poptextlen-t1;
+      else g_PopLists[g_uPopListNo].poplist[i]=0;
+    }
   }
   g_PopLists[g_uPopListNo].poptextlen=t1;
 }
