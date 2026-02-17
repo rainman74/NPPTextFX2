@@ -6531,15 +6531,15 @@ struct _MENUWALK {    // Set-by-caller values marked with (*) do not or may not 
   int nItemFoundLevel;
   //unsigned nLevel;    // not set by caller
   BOOL fQuit;         //*set by caller to FALSE, will be set to TRUE if recursion needs to be aborted
-  MENUITEMINFO mii;   // not set by caller, used constantly during operation and will return MENUITEM details for chCmd='f' upon valid hMenuFound
+  MENUITEMINFOA mii;  // not set by caller, used constantly during operation and will return MENUITEM details for chCmd='f' upon valid hMenuFound
   USHORT maxwID;      //*set by caller to 0, returns largest wID for non submenus on completion for chCmd='w'
 } ;
 
 /* We can use any MENUITEMINFO but for NT4, we need the old size. We aren't using >NT4 HBITMAP anyways. */
 #if defined(__MINGW32__) || defined(__WATCOMC__)
-#define cbMENUITEMINFO sizeof(MENUITEMINFO)
+#define cbMENUITEMINFO sizeof(MENUITEMINFOA)
 #else
-#define cbMENUITEMINFO sizeof(MENUITEMINFO)-sizeof(HBITMAP) /* This is for NT4 compatibility */
+#define cbMENUITEMINFO sizeof(MENUITEMINFOA)-sizeof(HBITMAP) /* This is for NT4 compatibility */
 #endif
 
 EXTERNC void menuwalkr(unsigned nLevel,struct _MENUWALK *mx) {
@@ -6551,7 +6551,7 @@ EXTERNC void menuwalkr(unsigned nLevel,struct _MENUWALK *mx) {
     for(mx->uItemStack[nLevel]=0; (int)(mx->uItemStack[nLevel])<uItemMax; mx->uItemStack[nLevel]++) {
       mx->mii.fMask=/*MIIM_CHECKMARKS*/MIIM_DATA|MIIM_ID|MIIM_STATE|MIIM_SUBMENU|MIIM_TYPE;
       mx->mii.cbSize=cbMENUITEMINFO; mx->mii.dwTypeData=mx->szMenuString; mx->mii.cch=NELEM(mx->szMenuString); // cbSize must be set each time
-      if (GetMenuItemInfo(mx->hMenuStack[nLevel],mx->uItemStack[nLevel],TRUE,&(mx->mii))) switch (mx->chCmd) {
+      if (GetMenuItemInfoA(mx->hMenuStack[nLevel],mx->uItemStack[nLevel],TRUE,&(mx->mii))) switch (mx->chCmd) {
 #if NPPDEBUG
       case 'd':
         sarmprintf(&mx->szBuf,&mx->cbBuf,&mx->cchBufLen,"%-*s%2u-dwTypeData:'%-12s'@cch:%u wID=%d dwItemData=0x%x Submenu=0x%x"/* fType=0x%X fState=0x%X"*/,(nLevel+1)*2,"",mx->uItemStack[nLevel],mx->mii.dwTypeData,mx->mii.cch,mx->mii.wID,mx->mii.dwItemData,mx->mii.hSubMenu/*,mx->mii.fType,mx->mii.fState*/);
@@ -6670,12 +6670,12 @@ HMENU g_mFormatSubmenu;
 int ANSImenubaritem,UTF8menubaritem,UCS2BEmenubaritem,UCS2LEmenubaritem,UTF8NBmenubaritem;
 int MACmenubaritem,UNIXmenubaritem,PCmenubaritem;
 EXTERNC BOOL IsMenuItemChecked(HMENU hMenu,UINT uItem,BOOL fByPosition) {
-  MENUITEMINFO mi;
+  MENUITEMINFOA mi;
 
   ZeroMemory(&mi,sizeof(mi));
   mi.cbSize=cbMENUITEMINFO;
   mi.fMask=MIIM_STATE;
-  GetMenuItemInfo(hMenu,uItem,fByPosition,&mi);
+  GetMenuItemInfoA(hMenu,uItem,fByPosition,&mi);
   return (mi.fState&MFS_CHECKED)?TRUE:FALSE;
 }
 #endif
@@ -6735,7 +6735,7 @@ EXTERNC PFUNCPLUGINCMD pfbuildmenu(void) {
     int uItem=0; while(
        mx.mii.fMask=/*MIIM_CHECKMARKS|*/MIIM_DATA|MIIM_ID|MIIM_STATE|MIIM_SUBMENU|MIIM_TYPE,
        mx.mii.cbSize=cbMENUITEMINFO, mx.mii.dwTypeData=mx.szMenuString, mx.mii.cch=NELEM(mx.szMenuString), // cbSize must be set each time
-       GetMenuItemInfo(hMenuOurPlugin,uItem,TRUE,&(mx.mii))) {
+       GetMenuItemInfoA(hMenuOurPlugin,uItem,TRUE,&(mx.mii))) {
       if (mx.szMenuString[0]=='!') {
         if (DeleteMenu(hMenuOurPlugin,uItem,MF_BYPOSITION)) --uItem;
       } else if (mx.szMenuString[0] && mx.szMenuString[1]==':') {
@@ -6745,10 +6745,10 @@ EXTERNC PFUNCPLUGINCMD pfbuildmenu(void) {
             memmovetest(mx.mii.dwTypeData,mx.mii.dwTypeData+2,mx.mii.cch-2+1);
             if (mx.mii.dwTypeData[0]=='-') mx.mii.fType=MFT_SEPARATOR;
             if (!menumove[i].location) {
-              if (InsertMenuItem(hMenuNewPluginMenu,uItemNewPluginMenu,TRUE,&mx.mii)) ++uItemNewPluginMenu;
+              if (InsertMenuItemA(hMenuNewPluginMenu,uItemNewPluginMenu,TRUE,&mx.mii)) ++uItemNewPluginMenu;
             } else {
               if (!menumove[i].hmn) menumove[i].hmn=CreateMenu();
-              InsertMenuItem(menumove[i].hmn,GetMenuItemCount(menumove[i].hmn),TRUE,&mx.mii);
+              InsertMenuItemA(menumove[i].hmn,GetMenuItemCount(menumove[i].hmn),TRUE,&mx.mii);
               for(wln=0; wln<NELEM(g_wIDlookup); wln++) if (mx.mii.wID==g_wIDlookup[wln].wParamLo) g_wIDlookup[wln].hSubMenu=menumove[i].hmn; // MultiPlex Menu
             }
           }
@@ -6762,25 +6762,56 @@ EXTERNC PFUNCPLUGINCMD pfbuildmenu(void) {
     mx.mii.cbSize=cbMENUITEMINFO;
     if (hMenuNewPluginMenu!=hMenuContainingOurPlugin) {
       mx.mii.dwTypeData=mx.szMenuString; mx.mii.cch=NELEM(mx.szMenuString);
-      if (GetMenuItemInfo(hMenuContainingOurPlugin,uItemContainingOurPlugin,TRUE,&(mx.mii)) && RemoveMenu(hMenuContainingOurPlugin,uItemContainingOurPlugin,MF_BYPOSITION) && InsertMenuItem(hMenuNewPluginMenu,uItemNewPluginMenu,TRUE,&mx.mii)) ++uItemNewPluginMenu;
+      if (GetMenuItemInfoA(hMenuContainingOurPlugin,uItemContainingOurPlugin,TRUE,&(mx.mii)) && RemoveMenu(hMenuContainingOurPlugin,uItemContainingOurPlugin,MF_BYPOSITION) && InsertMenuItemA(hMenuNewPluginMenu,uItemNewPluginMenu,TRUE,&mx.mii)) ++uItemNewPluginMenu;
     }
     for(i=0; i<NELEM(menumove); ++i) if (menumove[i].hmn) {
       mx.mii.dwTypeData=menumove[i].menuname;
       mx.mii.hSubMenu=menumove[i].hmn;
       if (menumove[i].location==1) {
-        if (InsertMenuItem(hMenuNewPluginMenu,uItemNewPluginMenu+MENUEXTRA,TRUE,&mx.mii)) ++uItemNewPluginMenu;
+        if (InsertMenuItemA(hMenuNewPluginMenu,uItemNewPluginMenu+MENUEXTRA,TRUE,&mx.mii)) ++uItemNewPluginMenu;
       } else {
-        if (InsertMenuItem(hMenuContainingPluginMenu,uItemContainingPluginMenu+uItemContainingPluginMenuOffset,TRUE,&mx.mii)) ++uItemContainingPluginMenuOffset;
+        if (InsertMenuItemA(hMenuContainingPluginMenu,uItemContainingPluginMenu+uItemContainingPluginMenuOffset,TRUE,&mx.mii)) ++uItemContainingPluginMenuOffset;
       }
     }
     if (hMenuNewPluginMenu!=hMenuContainingOurPlugin) {
       mx.mii.dwTypeData=PLUGIN_NAME_MENU;
       mx.mii.hSubMenu=hMenuNewPluginMenu;
-      InsertMenuItem(hMenuContainingPluginMenu,uItemContainingPluginMenu,TRUE,&mx.mii);
+      InsertMenuItemA(hMenuContainingPluginMenu,uItemContainingPluginMenu,TRUE,&mx.mii);
     }
   } while(0);
   for(wln=0; wln<NELEM(g_wIDlookup); wln++) g_wIDlookup[wln].wParamLo=0; // MultiPlex Menu
   if (mx.szBuf) freesafe(mx.szBuf,"pfbuildmenu");
+}
+
+EXTERNC PFUNCPLUGINCMD pfstripmenuprefixes(void) {
+  MENUITEMINFOA mi;
+  unsigned runonce;
+  int nbF=0;
+  struct FuncItem *fi=getFuncsArray(&nbF);
+  char szLabel[128];
+
+  ZeroMemory(&mi,sizeof(mi));
+  mi.cbSize=cbMENUITEMINFO;
+  mi.fMask=MIIM_TYPE;
+  for(runonce=0; fi && runonce<(unsigned)nbF; runonce++) {
+    mi.fType=MFT_STRING;
+    mi.dwTypeData=szLabel;
+    mi.cch=NELEM(szLabel);
+    if (!GetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[runonce]._cmdID,FALSE,&mi)) continue;
+
+    if (szLabel[0] && szLabel[1]==':') memmovetest(szLabel,szLabel+2,strlen(szLabel+2)+1);
+
+    if (szLabel[0]=='-') {
+      mi.fType=MFT_SEPARATOR;
+      mi.dwTypeData=NULL;
+      mi.cch=0;
+    } else {
+      mi.fType=MFT_STRING;
+      mi.dwTypeData=szLabel;
+      mi.cch=strlen(szLabel);
+    }
+    SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[runonce]._cmdID,FALSE,&mi);
+  }
 }
 
 // As we write this and other programs, we think of needed features and list them here.
@@ -7378,8 +7409,7 @@ if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
   if (!runonce && g_fLoadonce) {
     pfbuildmenu();
-    MENUITEMINFO miosep={sizeof(MENUITEMINFO),MIIM_TYPE,MFT_SEPARATOR,0,0,0,0,0,0,NULL,0};
-    for(runonce=0; runonce<NELEM(funcItem); runonce++) if (funcItem[runonce]._itemName[0]=='-') SetMenuItemInfo(GetMenu(g_nppData._nppHandle),funcItem[runonce]._cmdID,FALSE,&miosep);
+    pfstripmenuprefixes();
 #if ENABLE_TIDYDLL
     control_tidy(FALSE);
 #endif
