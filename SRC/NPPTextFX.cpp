@@ -5230,8 +5230,8 @@ EXTERNC PFUNCPLUGINCMD pfinsertruler(void) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
   unsigned eoltype=SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0);
   if (eoltype>=NELEM(eoltypes)) eoltype=NELEM(eoltypes)-1;
-  char *st1=NULL; unsigned sz1=103,sl1;
-  char *st2=NULL; unsigned sz2=103,sl2;
+  char *st1=NULL; unsigned sz1=103,sl1=0;
+  char *st2=NULL; unsigned sz2=103,sl2=0;
   int i; for(i=0; i<10; i++) {
     sarmprintf(&st1,&sz1,&sl1,"---%3d---|",i*10);
     strcpyarmsafe(&st2,&sz2,&sl2,"123456789|","pfinsertruler");
