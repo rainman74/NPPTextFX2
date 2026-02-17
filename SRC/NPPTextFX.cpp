@@ -5230,18 +5230,17 @@ EXTERNC PFUNCPLUGINCMD pfinsertruler(void) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
   unsigned eoltype=SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0);
   if (eoltype>=NELEM(eoltypes)) eoltype=NELEM(eoltypes)-1;
-  char *st1=NULL; unsigned sz1=103,sl1=0;
-  char *st2=NULL; unsigned sz2=103,sl2=0;
+  char st1[128],st2[128],st3[256],tmp[16];
+  unsigned sl1=0,sl2=0;
+
+  st1[0]='\0'; st2[0]='\0'; st3[0]='\0';
   int i; for(i=0; i<10; i++) {
-    sarmprintf(&st1,&sz1,&sl1,"---%3d---|",i*10);
-    strcpyarmsafe(&st2,&sz2,&sl2,"123456789|","pfinsertruler");
-    if (!st1 || !st2) goto fail;
+    snprintfX(tmp,sizeof(tmp),"---%3d---|",i*10);
+    sl1 += snprintfX(st1+sl1,sizeof(st1)-sl1,"%s",tmp);
+    sl2 += snprintfX(st2+sl2,sizeof(st2)-sl2,"123456789|");
   }
-  sarmprintf(&st1,&sz1,&sl1,"%s%s%s",eoltypes[eoltype],st2,eoltypes[eoltype]);
-  if (st1) SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, st1);
-fail:
-  if (st1) freesafe(st1,"pfinsertruler");
-  if (st2) freesafe(st2,"pfinsertruler");
+  snprintfX(st3,sizeof(st3),"%s%s%s%s",st1,eoltypes[eoltype],st2,eoltypes[eoltype]);
+  SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, st3);
 }
 
 #if 0 /* This was fixed in N++ 3.3 */
