@@ -7380,53 +7380,22 @@ if (!block) { // with enough delay, beNotified ends up rentrant
     unsigned mii;
     int nbF=0;
     struct FuncItem *fi=getFuncsArray(&nbF);
+    HMENU hMainMenu=GetMenu(g_nppData._nppHandle);
     pfbuildmenu();
     for(mii=0; fi && mii<(unsigned)nbF; mii++) {
       NPPCHAR *label=fi[mii]._itemName;
       if (label[0] && label[1]==NPPTEXT(':')) label+=2;
       if (label[0]==NPPTEXT('-') && !label[1]) {
 #ifdef NPP_UNICODE
-        MENUITEMINFOW miw;
-        ZeroMemory(&miw,sizeof(miw));
-        miw.cbSize=sizeof(miw);
-        miw.fMask=MIIM_FTYPE;
-        miw.fType=MFT_SEPARATOR;
-        SetMenuItemInfoW(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&miw);
+        ModifyMenuW(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_SEPARATOR,fi[mii]._cmdID,NULL);
 #else
-        MENUITEMINFOA mia;
-        ZeroMemory(&mia,sizeof(mia));
-        mia.cbSize=cbMENUITEMINFO;
-        mia.fMask=MIIM_FTYPE;
-        mia.fType=MFT_SEPARATOR;
-        SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mia);
+        ModifyMenuA(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_SEPARATOR,fi[mii]._cmdID,NULL);
 #endif
       } else {
 #ifdef NPP_UNICODE
-        MENUITEMINFOW miw;
-        wchar_t szLabel[nbChar];
-        unsigned i=0;
-        while(label[i] && i<NELEM(szLabel)-1) { szLabel[i]=label[i]; i++; }
-        szLabel[i]=L'\0';
-        ZeroMemory(&miw,sizeof(miw));
-        miw.cbSize=sizeof(miw);
-        miw.fMask=MIIM_STRING|MIIM_FTYPE;
-        miw.fType=MFT_STRING;
-        miw.dwTypeData=szLabel;
-        miw.cch=i;
-        SetMenuItemInfoW(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&miw);
+        ModifyMenuW(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_STRING,fi[mii]._cmdID,label);
 #else
-        MENUITEMINFOA mia;
-        char szLabel[nbChar];
-        unsigned i=0;
-        while(label[i] && i<NELEM(szLabel)-1) { szLabel[i]=label[i]; i++; }
-        szLabel[i]='\0';
-        ZeroMemory(&mia,sizeof(mia));
-        mia.cbSize=cbMENUITEMINFO;
-        mia.fMask=MIIM_STRING|MIIM_FTYPE;
-        mia.fType=MFT_STRING;
-        mia.dwTypeData=szLabel;
-        mia.cch=i;
-        SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mia);
+        ModifyMenuA(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_STRING,fi[mii]._cmdID,label);
 #endif
       }
     }
