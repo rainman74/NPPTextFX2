@@ -1,56 +1,47 @@
-name: CI_build
+name: CI build
 
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   build:
-
     runs-on: windows-latest
+
     strategy:
       fail-fast: false
-      max-parallel: 6
       matrix:
-        build_configuration: [Release Unicode, Debug Unicode]
-        build_platform: [x64, Win32, ARM64]
-        
+        config: [Debug Unicode, Release Unicode]
+        platform: [Win32, x64]
+
+    name: ${{ matrix.config }} / ${{ matrix.platform }}
+
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-    - name: MSBuild of plugin dll
-      working-directory: VC\
-      run: msbuild TextFX.vcxproj /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="v143"
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
-    - uses: olegtarasov/get-tag@v2.1.4
-      id: tagName
+      - name: Restore
+        run: nuget restore
 
-    - name: Archive artifacts for ${{ matrix.build_platform }}
-      if: matrix.build_platform == 'x64' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v4
-      with:
-          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
-          path: VC\NppTextFX64.dll
+      - name: Build
+        run: |
+          msbuild NppTextFX2.sln ^
+            /p:Configuration="${{ matrix.config }}" ^
+            /p:Platform="${{ matrix.platform }}" ^
+            /m
 
-    - name: Archive artifacts for ${{ matrix.build_platform }}
-      if: matrix.build_platform == 'Win32' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v4
-      with:
-          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
-          path: VC\NppTextFX.dll
-
-    - name: Archive artifacts for ${{ matrix.build_platform }}
-      if: matrix.build_platform == 'ARM64' && matrix.build_configuration == 'Release Unicode'
-      uses: actions/upload-artifact@v4
-      with:
-          name: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
-          path: VC\${{ matrix.build_platform }}\${{ matrix.build_configuration }}\NppTextFX64.dll
-
-    - name: Create release on tagging
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-          files: NppTextFX2_${{ steps.tagName.outputs.tag }}_${{ matrix.build_platform }}
-
+      # 🔵 Artefakte für Release builds (Win32 + x64)
+      - name: Upload Release artifact
+        if: matrix.config == 'Release Unicode'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NppTextFX2_${{ matrix.platform }}
+          path: |
+            **/${{ matrix.platform }}/Release*/NppTextFX*.dll
