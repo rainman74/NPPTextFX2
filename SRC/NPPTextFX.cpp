@@ -6786,23 +6786,25 @@ EXTERNC PFUNCPLUGINCMD pfbuildmenu(void) {
 EXTERNC PFUNCPLUGINCMD pfstripmenuprefixes(void) {
   MENUITEMINFOA mi;
   unsigned runonce;
-  char szLabel[nbChar];
+  char szLabel[128];
 
   ZeroMemory(&mi,sizeof(mi));
   mi.cbSize=cbMENUITEMINFO;
   mi.fMask=MIIM_TYPE;
   for(runonce=0; runonce<NELEM(funcItem); runonce++) {
-    char *label=funcItem[runonce]._itemName;
-    if (label[0] && label[1]==':') label+=2;
+    mi.fType=MFT_STRING;
+    mi.dwTypeData=szLabel;
+    mi.cch=NELEM(szLabel);
+    if (!GetMenuItemInfoA(GetMenu(g_nppData._nppHandle),funcItem[runonce]._cmdID,FALSE,&mi)) continue;
 
-    if (label[0]=='-') {
+    if (szLabel[0] && szLabel[1]==':') memmovetest(szLabel,szLabel+2,strlen(szLabel+2)+1);
+
+    if (szLabel[0]=='-') {
       mi.fType=MFT_SEPARATOR;
       mi.dwTypeData=NULL;
       mi.cch=0;
     } else {
       mi.fType=MFT_STRING;
-      strncpy(szLabel,label,NELEM(szLabel)-1);
-      szLabel[NELEM(szLabel)-1]='\0';
       mi.dwTypeData=szLabel;
       mi.cch=strlen(szLabel);
     }
