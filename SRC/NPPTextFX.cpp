@@ -4955,8 +4955,7 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
               SENDMSGTOCED(currentEdit, SCI_REPLACETARGET, chn, d);
             }
             d += chn;
-            if ((d[0]=='\r' && d[1]=='\n') || (d[0]=='\n' && d[1]=='\r')) d+=2;
-            else if (d[0]=='\r' || d[0]=='\n') d++;
+            d = memspn(d,end,"\r\n",2);
           }
           /*curpos = lpe[blocklines-1]+SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE, p1line+blocklines-1, 0);
           if (curpos<anchor) curpos=anchor+1; // carefully constructed cases can push anchor ahead of curpos
