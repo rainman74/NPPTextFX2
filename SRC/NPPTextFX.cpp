@@ -5230,18 +5230,17 @@ EXTERNC PFUNCPLUGINCMD pfinsertruler(void) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
   unsigned eoltype=SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0);
   if (eoltype>=NELEM(eoltypes)) eoltype=NELEM(eoltypes)-1;
-  char *st1=NULL; unsigned sz1=103,sl1;
-  char *st2=NULL; unsigned sz2=103,sl2;
+  char st1[128],st2[128],st3[256],tmp[16];
+  unsigned sl1=0,sl2=0;
+
+  st1[0]='\0'; st2[0]='\0'; st3[0]='\0';
   int i; for(i=0; i<10; i++) {
-    sarmprintf(&st1,&sz1,&sl1,"---%3d---|",i*10);
-    strcpyarmsafe(&st2,&sz2,&sl2,"123456789|","pfinsertruler");
-    if (!st1 || !st2) goto fail;
+    snprintfX(tmp,sizeof(tmp),"---%3d---|",i*10);
+    sl1 += snprintfX(st1+sl1,sizeof(st1)-sl1,"%s",tmp);
+    sl2 += snprintfX(st2+sl2,sizeof(st2)-sl2,"123456789|");
   }
-  sarmprintf(&st1,&sz1,&sl1,"%s%s%s",eoltypes[eoltype],st2,eoltypes[eoltype]);
-  if (st1) SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, st1);
-fail:
-  if (st1) freesafe(st1,"pfinsertruler");
-  if (st2) freesafe(st2,"pfinsertruler");
+  snprintfX(st3,sizeof(st3),"%s%s%s%s",st1,eoltypes[eoltype],st2,eoltypes[eoltype]);
+  SENDMSGTOCED(currentEdit, SCI_REPLACESEL, 0, st3);
 }
 
 #if 0 /* This was fixed in N++ 3.3 */
@@ -5549,7 +5548,7 @@ EXTERNC BOOL robothidecliplines(INT_CURRENTEDIT,char *str,char reveal,BOOL compl
     unsigned flags=FLAG_FIRST; do {
       int L1=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,tr.chrg.cpMin,0);
       if (SENDMSGTOCED(currentEdit, SCI_FINDTEXT,searchflags,&tr)>=0) flags |= FLAG_CONTINUE; else flags &= ~FLAG_CONTINUE;
-      if ((flags&(FLAG_FIRST|FLAG_CONTINUE)) == FLAG_FIRST /* halt when first search fails */) {MessageBox(g_nppData._nppHandle,"I'm not going to hide all the lines! Copy something to the Clipboard that can be found!",PLUGIN_NAME, MB_OK||MB_ICONSTOP); rv=FALSE; break;}
+      if ((flags&(FLAG_FIRST|FLAG_CONTINUE)) == FLAG_FIRST /* halt when first search fails */) {MessageBox(g_nppData._nppHandle,"I'm not going to hide all the lines! Copy something to the Clipboard that can be found!",PLUGIN_NAME, MB_OK|MB_ICONSTOP); rv=FALSE; break;}
       int L2=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,((flags&FLAG_CONTINUE)?tr.chrgText.cpMin:tr.chrg.cpMax),0);
       if (reveal=='+') {
         if (!complementary) L2=L1;
@@ -5684,12 +5683,12 @@ EXTERNC PFUNCPLUGINCMD pfvizsequenceall(void){
 
 EXTERNC PFUNCPLUGINCMD pfvizselectassequence(void){
   INT_CURRENTEDIT; GET_CURRENTEDIT;
-  char *rv,*end;
+  char *rv;
   unsigned st,ln;
   if ((st=SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, NULL))>1 && (rv=(char *)mallocsafe(st,"pfvizselectassequence")) ) {
         SENDMSGTOCED(currentEdit, SCI_GETSELTEXT, 0, rv);
         if ((ln=strlen(rv))) {
-          for(end=rv+ln-1; end>=rv; end--) if (*end=='\r' || *end=='\n') *end='\0';  // trim off eol that the user may or may not have included
+          while(ln && (rv[ln-1]=='\r' || rv[ln-1]=='\n')) rv[--ln]='\0'; // trim off eol that the user may or may not have included
       if ((ln=strlen(rv))) {
         if (g_pszVizSequence) freesafe(g_pszVizSequence,"pfvizselectassequence");
         g_pszVizSequence=rv;
@@ -5712,20 +5711,20 @@ BOOL g_fVizPasteToEditorEOL=TRUE;
 EXTERNC void copycutdeletevisible(unsigned flags,char which) {
   INT_CURRENTEDIT; GET_CURRENTEDIT;
   char *buf=NULL; unsigned bufsz=0,buflen;
-  unsigned *lps=NULL,*lpe=NULL; unsigned lpssz=0,lpesz=0,lplen;
-  int p1=SENDMSGTOCED(currentEdit, SCI_GETSELECTIONSTART, 0, 0);
-  int p2=SENDMSGTOCED(currentEdit, SCI_GETSELECTIONEND, 0, 0);
+  Sci_Position *lps=NULL,*lpe=NULL; unsigned lpssz=0,lpesz=0,lplen;
+  Sci_Position p1=SENDMSGTOCED(currentEdit, SCI_GETSELECTIONSTART, 0, 0);
+  Sci_Position p2=SENDMSGTOCED(currentEdit, SCI_GETSELECTIONEND, 0, 0);
   if (p1<p2) {
     unsigned eoltype=SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0);
     if (eoltype>=NELEM(eoltypes)) eoltype=NELEM(eoltypes)-1;
     if (SENDMSGTOCED(currentEdit, SCI_SELECTIONISRECTANGLE, 0, 0)) flags |= SCDS_COPYRECTANGULAR; else flags &= ~SCDS_COPYRECTANGULAR;
-    unsigned blockstart=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,p1, 0);
-    unsigned blocklines=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,p2, 0)-blockstart+1;
+    int blockstart=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,p1, 0);
+    int blocklines=SENDMSGTOCED(currentEdit, SCI_LINEFROMPOSITION,p2, 0)-blockstart+1;
     unsigned ln; for(lplen=ln=0; ln<blocklines; ln++) {
         int vis=SENDMSGTOCED(currentEdit, SCI_GETLINEVISIBLE, (blockstart+ln),0);
         if (which=='*' || (vis && which=='+') || (!vis && which=='-')){
-        unsigned ls; if ((unsigned)INVALID_POSITION==(ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (blockstart+ln),0))) continue;
-        unsigned le; if ((unsigned)INVALID_POSITION==(le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION, (blockstart+ln),0))) continue;
+        Sci_Position ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (blockstart+ln),0); if (INVALID_POSITION==ls) continue;
+        Sci_Position le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION, (blockstart+ln),0); if (INVALID_POSITION==le) continue;
         if (!lplen || lpe[lplen-1]!=ls) {
           armreallocsafe((char **)&lps,&lpssz,(lplen+1)*sizeof(*lps),ARMSTRATEGY_INCREASE,0,"pfvizcopyvisible"); if (!lps) goto failbreak;
           armreallocsafe((char **)&lpe,&lpesz,(lplen+1)*sizeof(*lps),ARMSTRATEGY_INCREASE,0,"pfvizcopyvisible"); if (!lpe) goto failbreak;
@@ -5765,7 +5764,7 @@ EXTERNC void copycutdeletevisible(unsigned flags,char which) {
         ,SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0)) ) goto failbreak;
     }
     if (flags & SCDS_DELETE) {
-      unsigned curpos=SENDMSGTOCED(currentEdit, SCI_GETCURRENTPOS, 0, 0);
+      Sci_Position curpos=SENDMSGTOCED(currentEdit, SCI_GETCURRENTPOS, 0, 0);
       SENDMSGTOCED(currentEdit, SCI_BEGINUNDOACTION, 0, 0);
         for(ln=lplen; ln>0; ln--) {
                 SENDMSGTOCED(currentEdit, SCI_SETTARGETSTART,lps[ln-1],0);
@@ -5815,7 +5814,7 @@ EXTERNC void VizPaste(unsigned flags) {
       (g_fVizPasteToEditorEOL?SCDS_PASTETOEDITOREOL:0)|
       (IsScintillaUnicode(currentEdit)?SCDS_UNICODEMODE:0)
       ,SENDMSGTOCED(currentEdit, SCI_GETEOLMODE, 0, 0),&isrectangular))) {
-    int curpos=0; if (g_fVizPasteRetainsPosition) curpos=SENDMSGTOCED(currentEdit, SCI_GETCURRENTPOS, 0, 0);
+    Sci_Position curpos=0; if (g_fVizPasteRetainsPosition) curpos=SENDMSGTOCED(currentEdit, SCI_GETCURRENTPOS, 0, 0);
     if (isrectangular) {
       SENDMSGTOCED(currentEdit, SCI_PASTE, 0, 0); // we can't handle binary rectangular text and may never need to
     } else {
@@ -7077,18 +7076,14 @@ struct FuncItem funcItem[]={
 {NPPTEXT("Escape ' to \\'"),pfconvertescape1qs1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape ' to \\\""),pfconvertescape1qsq,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape both \"&&' to \\\"&&\\'"),pfconvertescapeboth,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#ifdef X86
 {NPPTEXT("unEscape \\\" to \""),pfconvertunescapesq,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \\' to '"),pfconvertunescapes1q1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \\\" to '"),pfconvertunescapesq1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape both \\\"&&\\' to \"&&'"),pfconvertunescapeboth,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#endif
 {NPPTEXT("Escape \" to \"\""),pfconvertescape2q22q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("Escape ' to \"\""),pfconvertescape1q22q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#ifdef X86
 {NPPTEXT("unEscape \"\" to \""),pfconvertunescape22q2q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("unEscape \"\" to '"),pfconvertunescape22q1q,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#endif
 {NPPTEXT("-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("UPPER CASE"),pfconvertuppercase,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("lower case"),pfconvertlowercase,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7124,7 +7119,6 @@ struct FuncItem funcItem[]={
 #endif
 //{NPPTEXT("V:Show/Hide 'All' Set Line Range"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)}, // proposed
 //{NPPTEXT("V:Show/Hide 'All' Clear Range"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)}, // proposed
-#ifdef X86
 {NPPTEXT("V:Show Between-Selected or All-Reset Lines"),pfvizshowselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("V:Hide Between-Selected or All-Reset Lines"),pfvizhideselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("V:Invert Visibility Between-Selected or All Lines"),pfvizinvertselectedalllines,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7194,7 +7188,6 @@ struct FuncItem funcItem[]={
 {NPPTEXT("E:ReWrap Text to (Clipboard or 72) width"),pfrewraptext,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("E:Extend selection as rectangular to end of file"),pfextendblock,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("E:Pad rectangular selection with spaces"),pfextendblockspaces,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#endif
 {NPPTEXT("C:Encode URI Component"),pfencodeURIcomponent,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Encode HTML (&&<>\")"),pfencodeHTML,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("C:Strip HTML tags table tabs"),pfstripHTMLtags,0,FALSE NPPPLUGINACCELERATOR(NULL)},
@@ -7230,9 +7223,7 @@ struct FuncItem funcItem[]={
 {NPPTEXT("T:+Sort outputs only UNIQUE (at column) lines"),pfSortLinesUnique,0,TRUE  NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:-"),pfdummy,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Insert Ascii Chart or Character"),pfinsertasciichart,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#ifdef X86
 {NPPTEXT("T:Insert Ruler"),pfinsertruler,0,FALSE NPPPLUGINACCELERATOR(NULL)},
-#endif
 {NPPTEXT("T:Insert Line Numbers"),pfinsertlinenumbers,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 {NPPTEXT("T:Delete Line Numbers or First Word"),pfdeletefirstword,0,FALSE NPPPLUGINACCELERATOR(NULL)},
 //{NPPTEXT("T:Clean eMail >Quoting"),pfcleanemailquoting,0,FALSE NPPPLUGINACCELERATOR(NULL)},
