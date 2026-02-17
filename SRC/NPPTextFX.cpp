@@ -7377,24 +7377,58 @@ extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCo
 if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
   if (!runonce && g_fLoadonce) {
-    MENUITEMINFOA mi;
     unsigned mii;
     int nbF=0;
     struct FuncItem *fi=getFuncsArray(&nbF);
-    char szLabel[128];
     pfbuildmenu();
-    ZeroMemory(&mi,sizeof(mi));
-    mi.cbSize=cbMENUITEMINFO;
-    mi.fMask=MIIM_TYPE;
     for(mii=0; fi && mii<(unsigned)nbF; mii++) {
-      mi.fType=MFT_STRING;
-      mi.dwTypeData=szLabel;
-      mi.cch=NELEM(szLabel);
-      if (!GetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mi)) continue;
-      if (szLabel[0] && szLabel[1]==':') memmovetest(szLabel,szLabel+2,strlen(szLabel+2)+1);
-      if (szLabel[0]=='-') {mi.fType=MFT_SEPARATOR; mi.dwTypeData=NULL; mi.cch=0;}
-      else {mi.fType=MFT_STRING; mi.dwTypeData=szLabel; mi.cch=strlen(szLabel);}
-      SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mi);
+      NPPCHAR *label=fi[mii]._itemName;
+      if (label[0] && label[1]==NPPTEXT(':')) label+=2;
+      if (label[0]==NPPTEXT('-') && !label[1]) {
+#ifdef NPP_UNICODE
+        MENUITEMINFOW miw;
+        ZeroMemory(&miw,sizeof(miw));
+        miw.cbSize=sizeof(miw);
+        miw.fMask=MIIM_FTYPE;
+        miw.fType=MFT_SEPARATOR;
+        SetMenuItemInfoW(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&miw);
+#else
+        MENUITEMINFOA mia;
+        ZeroMemory(&mia,sizeof(mia));
+        mia.cbSize=cbMENUITEMINFO;
+        mia.fMask=MIIM_FTYPE;
+        mia.fType=MFT_SEPARATOR;
+        SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mia);
+#endif
+      } else {
+#ifdef NPP_UNICODE
+        MENUITEMINFOW miw;
+        wchar_t szLabel[nbChar];
+        unsigned i=0;
+        while(label[i] && i<NELEM(szLabel)-1) { szLabel[i]=label[i]; i++; }
+        szLabel[i]=L'\0';
+        ZeroMemory(&miw,sizeof(miw));
+        miw.cbSize=sizeof(miw);
+        miw.fMask=MIIM_STRING|MIIM_FTYPE;
+        miw.fType=MFT_STRING;
+        miw.dwTypeData=szLabel;
+        miw.cch=i;
+        SetMenuItemInfoW(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&miw);
+#else
+        MENUITEMINFOA mia;
+        char szLabel[nbChar];
+        unsigned i=0;
+        while(label[i] && i<NELEM(szLabel)-1) { szLabel[i]=label[i]; i++; }
+        szLabel[i]='\0';
+        ZeroMemory(&mia,sizeof(mia));
+        mia.cbSize=cbMENUITEMINFO;
+        mia.fMask=MIIM_STRING|MIIM_FTYPE;
+        mia.fType=MFT_STRING;
+        mia.dwTypeData=szLabel;
+        mia.cch=i;
+        SetMenuItemInfoA(GetMenu(g_nppData._nppHandle),fi[mii]._cmdID,FALSE,&mia);
+#endif
+      }
     }
 #if ENABLE_TIDYDLL
     control_tidy(FALSE);
