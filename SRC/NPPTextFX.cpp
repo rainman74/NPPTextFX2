@@ -3674,8 +3674,8 @@ EXTERNC unsigned trimtrailingspace(char *dest,unsigned *destlen) {
     for(d=dest,end=dest+*destlen;d<end; ) {
       dp=d;
       d=memcspn(d,end,"\r\n",2);
-      for(d--,lold=0; d>=dp && *d==' '; d--, lold++);
-      d++;
+      lold=0;
+      while(d>dp && d[-1]==' ') { d--; lold++; }
       if (lnew != lold) {
         memmovetest(d+lnew,d+lold,*destlen-(d-dest)-lold+1);
         *destlen += lnew-lold;
