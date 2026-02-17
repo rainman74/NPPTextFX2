@@ -9,9 +9,9 @@ So I grabbed the source code with the aim to bypass the blocking. But in the pro
 - Removal of no longer needed or working menus
 - Updates for current Scintilla
 - 64-bit version is fully functional
-- 64 bit version does not yet contain all functions like the 32 bit version
+- 64 bit version does now contain all functions like the 32 bit version (Please create an issue if a function is not working as expected under x64)
 
-This code can be build on Visual Studio 2022 (Community Edition).
+This code can be build on Visual Studio 2022 / 2026 (Community Editions).
 
 Original source code for version 0.25 (dated 2008) can be fround from here:
 https://sourceforge.net/projects/npp-plugins/files/TextFX/.
