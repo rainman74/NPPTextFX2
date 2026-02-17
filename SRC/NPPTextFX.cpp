@@ -4827,8 +4827,14 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
       lpe=(unsigned *)mallocsafe(blocklines*sizeof(*lpe),"convertall-bloclines"); if (!lpe) break;
       unsigned ln; for(ln=0; ln<blocklines; ln++) {
         unsigned lbof=SENDMSGTOCED(currentEdit, SCI_POSITIONFROMLINE  , (p1line+ln),0);
-        lps[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0)-lbof;
-        lpe[ln]= SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0)-lbof;
+        Sci_Position ls=SENDMSGTOCED(currentEdit, SCI_GETLINESELSTARTPOSITION, (p1line+ln),0);
+        Sci_Position le=SENDMSGTOCED(currentEdit, SCI_GETLINESELENDPOSITION  , (p1line+ln),0);
+        if (INVALID_POSITION==ls || INVALID_POSITION==le || le<ls) {
+          lps[ln]=lpe[ln]=0;
+        } else {
+          lps[ln]=(unsigned)(ls-lbof);
+          lpe[ln]=(unsigned)(le-lbof);
+        }
       }
     }
     // this could be recoded to convert a line at a time but issues such as long line length
