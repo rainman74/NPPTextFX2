@@ -2759,17 +2759,22 @@ failbreak:
 // preserveodd=TRUE: non multiples of tabwidth spacing will be preserved, otherwise truncated (amending might overflow the buffer if we amend a lot of spaces)
 EXTERNC unsigned space2tabs(char **dest,unsigned *destsz,unsigned *destlen,int usetabs,unsigned tabwidth,int preserveodd) {
   unsigned n=0,lnew,lold,indent;
+  int lineusetabs;
   char *d,*dp,*end;
 
   if (*dest) {
     for(d=*dest,end=d+*destlen; d<end; ) {
-      for(indent=0,dp=d; 1; dp++) {
+      for(indent=0,dp=d,lineusetabs=usetabs; 1; dp++) {
         if (*dp==' ') indent++;
-        else if (*dp=='\t') indent+=tabwidth;
+        else if (*dp=='\t') {
+          indent+=tabwidth;
+          if (lineusetabs<0) lineusetabs=0;
+        }
         else break;
       }
       lold=(dp-d);
-      if (usetabs) {
+      if (lineusetabs<0 && lold) lineusetabs=1;
+      if (lineusetabs>0) {
         lnew=indent/tabwidth;
         if (preserveodd && lnew*tabwidth!=indent) lnew=lold=0;
       } else lnew=indent;
@@ -2779,7 +2784,7 @@ EXTERNC unsigned space2tabs(char **dest,unsigned *destsz,unsigned *destlen,int u
             n++;
           }
           if (lnew) {
-            if (mymemset(d,usetabs?'\t':' ',lnew) && lnew==lold) n++;
+            if (mymemset(d,lineusetabs>0?'\t':' ',lnew) && lnew==lold) n++;
             d+=lnew;
           }
       d=memcspn(d,end,"\r\n",2);
@@ -4905,7 +4910,7 @@ EXTERNC void convertall(char cmd,unsigned flags,const char *s1,const char *s2,co
     case 'Z': rv=strchrstrans(&tx,&txsz,&sln,NULL,s1,strlen(s1),s2); break;
     case '&': rv=prepostpendlines(&tx,&txsz,&sln,*s3=='s'?0:1,s1,strlen(s1),s2,strlen(s2),s3+1,strlen(s3+1),s4,strlen(s4)); break;
     case ',': rv=lineup(&tx,&txsz,&sln,clip?*clip:*s1,SENDMSGTOCED(currentEdit, SCI_GETUSETABS, 0, 0),SENDMSGTOCED(currentEdit, SCI_GETTABWIDTH, 0, 0),1 /* C-STRING */); break;
-    case '\t': rv=space2tabs(&tx,&txsz,&sln,SENDMSGTOCED(currentEdit, SCI_GETUSETABS, 0, 0),s1?atoi(s1):SENDMSGTOCED(currentEdit, SCI_GETTABWIDTH, 0, 0),0); break;
+    case '\t': rv=space2tabs(&tx,&txsz,&sln,-1,s1?atoi(s1):SENDMSGTOCED(currentEdit, SCI_GETTABWIDTH, 0, 0),0); break;
     case '|': rv=insertclipboardcolumn(&tx,&txsz,&sln,clip,p1diff); break;
     case 'W':
     case 'w': rv=rewraptexttest(&tx,&txsz,&sln,(cmd=='W'?0:((clip&&isdigit(*clip))?atoi(clip):1)),eoltype); break;
