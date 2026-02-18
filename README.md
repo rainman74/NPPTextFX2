@@ -9,7 +9,7 @@ So I grabbed the source code with the aim to bypass the blocking. But in the pro
 - Removal of no longer needed or working menus
 - Updates for current Scintilla
 - 64-bit version is fully functional
-- 64 bit version does now contain all functions like the 32 bit version (Please create an issue if a function is not working as expected under x64)
+- The 64-bit version now includes all the features of the 32-bit version (Please create an issue if a function is not working as expected under x64)
 
 This code can be build on Visual Studio 2022 / 2026 (Community Editions).
 
