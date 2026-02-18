@@ -7364,21 +7364,9 @@ extern "C" __declspec(dllexport) BOOL isUnicode() {
 }
 #endif
 
-EXTERNC BOOL IsTextFXMenuRefreshNotification(unsigned code) {
-  switch(code) {
-  case NPPN_READY:
-  case NPPN_FILEOPENED:
-  case NPPN_BUFFERACTIVATED:
-  case NPPN_LANGCHANGED:
-    return TRUE;
-  }
-  return FALSE;
-}
-
 EXTERNC BOOL RefreshTextFXMenuLabels(void) {
   int nbF=0;
   BOOL modified=FALSE;
-  BOOL success=FALSE;
   BOOL hasValidCmdID=FALSE;
   struct FuncItem *fi=getFuncsArray(&nbF);
   HMENU hMainMenu=GetMenu(g_nppData._nppHandle);
@@ -7392,28 +7380,37 @@ EXTERNC BOOL RefreshTextFXMenuLabels(void) {
     hasValidCmdID=TRUE;
     if (label[0] && label[1]==NPPTEXT(':')) label+=2;
     if (label[0]==NPPTEXT('-') && !label[1]) {
+      MENUITEMINFOA mi;
+      ZeroMemory(&mi,sizeof(mi));
+      mi.cbSize=cbMENUITEMINFO;
+      mi.fMask=MIIM_TYPE;
+      if (GetMenuItemInfoA(hMainMenu,cmdID,FALSE,&mi) && (mi.fType&MFT_SEPARATOR)) continue;
 #ifdef NPP_UNICODE
       if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
 #else
       if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
 #endif
         modified=TRUE;
-        success=TRUE;
       }
     } else {
 #ifdef NPP_UNICODE
+      WCHAR current[260];
+      int cch=GetMenuStringW(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
+      if (cch>0 && !lstrcmpW(current,label)) continue;
       if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
 #else
+      char current[260];
+      int cch=GetMenuStringA(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
+      if (cch>0 && !lstrcmpA(current,label)) continue;
       if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
 #endif
         modified=TRUE;
-        success=TRUE;
       }
     }
   }
   if (!hasValidCmdID) return FALSE;
   if (modified) DrawMenuBar(g_nppData._nppHandle);
-  return success;
+  return TRUE;
 }
 
 // If you don't need get the notification from Notepad++,
@@ -7428,7 +7425,7 @@ extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCo
 
 if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
-  if (!g_fLoadonce && IsTextFXMenuRefreshNotification(notifyCode->nmhdr.code)) RefreshTextFXMenuLabels();
+  if (!g_fLoadonce) RefreshTextFXMenuLabels();
   if (!runonce && g_fLoadonce) {
     pfbuildmenu();
     RefreshTextFXMenuLabels();
