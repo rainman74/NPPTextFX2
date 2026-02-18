@@ -7364,6 +7364,17 @@ extern "C" __declspec(dllexport) BOOL isUnicode() {
 }
 #endif
 
+EXTERNC BOOL IsTextFXMenuRefreshNotification(unsigned code) {
+  switch(code) {
+  case NPPN_READY:
+  case NPPN_FILEOPENED:
+  case NPPN_BUFFERACTIVATED:
+  case NPPN_LANGCHANGED:
+    return TRUE;
+  }
+  return FALSE;
+}
+
 EXTERNC BOOL RefreshTextFXMenuLabels(void) {
   int nbF=0;
   BOOL modified=FALSE;
@@ -7417,7 +7428,7 @@ extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCo
 
 if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
-  if (!g_fLoadonce) RefreshTextFXMenuLabels();
+  if (!g_fLoadonce && IsTextFXMenuRefreshNotification(notifyCode->nmhdr.code)) RefreshTextFXMenuLabels();
   if (!runonce && g_fLoadonce) {
     pfbuildmenu();
     RefreshTextFXMenuLabels();
