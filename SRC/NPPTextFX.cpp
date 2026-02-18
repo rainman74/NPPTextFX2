@@ -7411,17 +7411,16 @@ extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCo
   static unsigned runonce=0;
   static unsigned prevline;
   static BOOL block=FALSE;
-  static BOOL menuLabelsCleaned=FALSE;
   BOOL kscapital;
   static char chPerformKey='\0';
   INT_CURRENTEDIT;
 
 if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
-  if (!menuLabelsCleaned && !g_fLoadonce) menuLabelsCleaned=RefreshTextFXMenuLabels();
+  if (!g_fLoadonce) RefreshTextFXMenuLabels();
   if (!runonce && g_fLoadonce) {
     pfbuildmenu();
-    menuLabelsCleaned=RefreshTextFXMenuLabels();
+    RefreshTextFXMenuLabels();
 #if ENABLE_TIDYDLL
     control_tidy(FALSE);
 #endif
