@@ -7364,6 +7364,55 @@ extern "C" __declspec(dllexport) BOOL isUnicode() {
 }
 #endif
 
+EXTERNC BOOL RefreshTextFXMenuLabels(void) {
+  int nbF=0;
+  BOOL modified=FALSE;
+  BOOL hasValidCmdID=FALSE;
+  struct FuncItem *fi=getFuncsArray(&nbF);
+  HMENU hMainMenu=GetMenu(g_nppData._nppHandle);
+  if (!fi || !hMainMenu) return FALSE;
+
+  unsigned mii;
+  for(mii=0; mii<(unsigned)nbF; mii++) {
+    NPPCHAR *label=fi[mii]._itemName;
+    UINT cmdID=(UINT)fi[mii]._cmdID;
+    if (!label || !cmdID) continue;
+    hasValidCmdID=TRUE;
+    if (label[0] && label[1]==NPPTEXT(':')) label+=2;
+    if (label[0]==NPPTEXT('-') && !label[1]) {
+      MENUITEMINFOA mi;
+      ZeroMemory(&mi,sizeof(mi));
+      mi.cbSize=cbMENUITEMINFO;
+      mi.fMask=MIIM_TYPE;
+      if (GetMenuItemInfoA(hMainMenu,cmdID,FALSE,&mi) && (mi.fType&MFT_SEPARATOR)) continue;
+#ifdef NPP_UNICODE
+      if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
+#else
+      if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
+#endif
+        modified=TRUE;
+      }
+    } else {
+#ifdef NPP_UNICODE
+      WCHAR current[260];
+      int cch=GetMenuStringW(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
+      if (cch>0 && !lstrcmpW(current,label)) continue;
+      if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
+#else
+      char current[260];
+      int cch=GetMenuStringA(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
+      if (cch>0 && !lstrcmpA(current,label)) continue;
+      if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
+#endif
+        modified=TRUE;
+      }
+    }
+  }
+  if (!hasValidCmdID) return FALSE;
+  if (modified) DrawMenuBar(g_nppData._nppHandle);
+  return TRUE;
+}
+
 // If you don't need get the notification from Notepad++,
 // just let it be empty.
 extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCode) {
@@ -7376,33 +7425,13 @@ extern "C" __declspec(dllexport) void beNotified(struct SCNotification *notifyCo
 
 if (!block) { // with enough delay, beNotified ends up rentrant
   block=TRUE;
+  if (!g_fLoadonce) RefreshTextFXMenuLabels();
   if (!runonce && g_fLoadonce) {
-    unsigned mii;
-    int nbF=0;
-    struct FuncItem *fi=getFuncsArray(&nbF);
-    HMENU hMainMenu=GetMenu(g_nppData._nppHandle);
     pfbuildmenu();
-    for(mii=0; fi && mii<(unsigned)nbF; mii++) {
-      NPPCHAR *label=fi[mii]._itemName;
-      if (label[0] && label[1]==NPPTEXT(':')) label+=2;
-      if (label[0]==NPPTEXT('-') && !label[1]) {
-#ifdef NPP_UNICODE
-        ModifyMenuW(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_SEPARATOR,fi[mii]._cmdID,NULL);
-#else
-        ModifyMenuA(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_SEPARATOR,fi[mii]._cmdID,NULL);
-#endif
-      } else {
-#ifdef NPP_UNICODE
-        ModifyMenuW(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_STRING,fi[mii]._cmdID,label);
-#else
-        ModifyMenuA(hMainMenu,fi[mii]._cmdID,MF_BYCOMMAND|MF_STRING,fi[mii]._cmdID,label);
-#endif
-      }
-    }
+    RefreshTextFXMenuLabels();
 #if ENABLE_TIDYDLL
     control_tidy(FALSE);
 #endif
-    DrawMenuBar(g_nppData._nppHandle);
     CloseHandle(g_fLoadonce); // closing here will allow another invocation of Notepad++ + NPPTextFX to load if N++ allows this
     g_fLoadonce=NULL;
     if (!funcItem[g_miDisableSubclassing]._init2Check) {
