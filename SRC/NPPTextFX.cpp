@@ -3170,9 +3170,11 @@ char *strcpyline(char *dest,char *src) {
 // new feature: numeric sort
 // new feature: ignore leading spaces,tabs
 EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,int nocase,int ascending,unsigned column) {
-  unsigned n=0/*,chn*/,lineno,lineno2,linessz;
+  unsigned n=0/*,chn*/,lineno,lineno2,linessz,trailingEolStart,trailingEolLen;
   char *d,*dp,*nstr; char **lines=NULL;
   if (*dest) {
+    for(trailingEolStart=*destlen; trailingEolStart && ((*dest)[trailingEolStart-1]=='\r' || (*dest)[trailingEolStart-1]=='\n'); trailingEolStart--) ;
+    trailingEolLen=*destlen-trailingEolStart;
     g_fcmpcolumn=column;
     g_fcmpascending=ascending;
     for(d=*dest+strspn(*dest,"\r\n"), lineno=0,linessz=0; *d ; lineno++) {
@@ -3198,14 +3200,26 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
         d=strcpyline(d,lines[lineno2]);
     }
     if (!g_SortLinesUnique) {strcpy(d,dp); d += strlen(dp);} // grab extra lines at the end
+    // Sort without uniqueness should never change byte length. If line-ending
+    // reconstruction produced fewer bytes, restore the exact trailing bytes from
+    // the original block to preserve spacing after the sorted section.
+    if (!g_SortLinesUnique && (unsigned)(d-nstr)<*destlen) {
+      memcpy(d,*dest+(d-nstr),*destlen-(d-nstr));
+      d += *destlen-(d-nstr);
+    }
+    // Preserve the exact trailing EOL bytes from the original block.
+    // This ensures the following non-selected line stays separated after sorting.
+    if (!g_SortLinesUnique && trailingEolLen && (unsigned)(d-nstr)>=trailingEolLen) {
+      memcpy(nstr+(d-nstr)-trailingEolLen,*dest+trailingEolStart,trailingEolLen);
+    }
 #if NPPDEBUG /* { */
     if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr))
       MessageBox(g_nppData._nppHandle,"The size of the sort buffer should not have changed",PLUGIN_NAME, MB_OK|MB_ICONWARNING);
 #endif /* } */
     freesafe(*dest,"strqsortlines");
     *dest=nstr;
-    *destsz=*destlen+1;
     *destlen=d-nstr;
+    *destsz=*destlen+1;
     n=1;
   }
 failbreak:
