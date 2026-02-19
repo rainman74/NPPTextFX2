@@ -3198,14 +3198,21 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
         d=strcpyline(d,lines[lineno2]);
     }
     if (!g_SortLinesUnique) {strcpy(d,dp); d += strlen(dp);} // grab extra lines at the end
+    // Sort without uniqueness should never change byte length. If line-ending
+    // reconstruction produced fewer bytes, restore the exact trailing bytes from
+    // the original block to preserve spacing after the sorted section.
+    if (!g_SortLinesUnique && (unsigned)(d-nstr)<*destlen) {
+      memcpy(d,*dest+(d-nstr),*destlen-(d-nstr));
+      d += *destlen-(d-nstr);
+    }
 #if NPPDEBUG /* { */
     if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr))
       MessageBox(g_nppData._nppHandle,"The size of the sort buffer should not have changed",PLUGIN_NAME, MB_OK|MB_ICONWARNING);
 #endif /* } */
     freesafe(*dest,"strqsortlines");
     *dest=nstr;
-    *destsz=*destlen+1;
     *destlen=d-nstr;
+    *destsz=*destlen+1;
     n=1;
   }
 failbreak:
