@@ -3170,52 +3170,38 @@ char *strcpyline(char *dest,char *src) {
 // new feature: numeric sort
 // new feature: ignore leading spaces,tabs
 EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,int nocase,int ascending,unsigned column) {
-  unsigned n=0/*,chn*/,lineno,lineno2,linessz,trailingEolStart,trailingEolLen;
-  char *d,*dp,*nstr; char **lines=NULL;
+  unsigned n=0/*,chn*/,lineno,lineno2,linessz,eolsz,eollensz;
+  unsigned *lineeollen=NULL;
+  char *d,*nstr; char **lines=NULL,**lineeol=NULL;
   if (*dest) {
-    for(trailingEolStart=*destlen; trailingEolStart && ((*dest)[trailingEolStart-1]=='\r' || (*dest)[trailingEolStart-1]=='\n'); trailingEolStart--) ;
-    trailingEolLen=*destlen-trailingEolStart;
     g_fcmpcolumn=column;
     g_fcmpascending=ascending;
-    for(d=*dest+strspn(*dest,"\r\n"), lineno=0,linessz=0; *d ; lineno++) {
-      armreallocsafe((char **)&lines,&linessz,(lineno+1)*sizeof(*lines),ARMSTRATEGY_INCREASE,0,"strqsortlines"); if (!lines) goto failbreak;
+    for(d=*dest, lineno=0,linessz=0,eolsz=0,eollensz=0; *d ; lineno++) {
+      armreallocsafe((char **)&lines,&linessz,(lineno+1)*sizeof(*lines),ARMSTRATEGY_INCREASE,0,"strqsortlines-lines"); if (!lines) goto failbreak;
+      armreallocsafe((char **)&lineeol,&eolsz,(lineno+1)*sizeof(*lineeol),ARMSTRATEGY_INCREASE,0,"strqsortlines-lineeol"); if (!lineeol) goto failbreak;
+      armreallocsafe((char **)&lineeollen,&eollensz,(lineno+1)*sizeof(*lineeollen),ARMSTRATEGY_INCREASE,0,"strqsortlines-lineeollen"); if (!lineeollen) goto failbreak;
       lines[lineno]=d;
       d+=strcspn(d,"\r\n");
-      while(*d && (*d=='\r' || *d=='\n')) d++;
+      lineeol[lineno]=d;
+      if (*d=='\r' && *(d+1)=='\n') {lineeollen[lineno]=2; d+=2;}
+      else if (*d=='\r' || *d=='\n') {lineeollen[lineno]=1; d++;}
+      else lineeollen[lineno]=0;
     }
     if (!(nstr=(char *)mallocsafe(*destlen+1,"strqsortlines"))) goto failbreak;
-    //memset(nstr,0,*destlen+1);
     g_fcmpnocase=nocase;
     qsortintro(lines,lineno,sizeof(lines[0]),fcmpline);
-    for(dp=*dest,d=nstr,lineno2=0; lineno2<lineno; lineno2++) if (lineno2==0 || !g_SortLinesUnique || fcmpline(lines+lineno2,lines+lineno2-1)) {
-        if (!g_SortLinesUnique) {
-        while(*dp=='\r' || *dp=='\n') {*d=*dp; d++; dp++;} // import the line endings from the unsorted string
-        } else {
-                if (*dp=='\r' || *dp=='\n') {
-                        *d=*dp; d++; dp++;
-                if (*(dp-1)=='\r' && *dp=='\n') {*d=*dp; d++; dp++; }
-                }
-        }
-      dp+=strcspn(dp,"\r\n");
-        d=strcpyline(d,lines[lineno2]);
-    }
-    if (!g_SortLinesUnique) {strcpy(d,dp); d += strlen(dp);} // grab extra lines at the end
-    // Sort without uniqueness should never change byte length. If line-ending
-    // reconstruction produced fewer bytes, restore the exact trailing bytes from
-    // the original block to preserve spacing after the sorted section.
-    if (!g_SortLinesUnique && (unsigned)(d-nstr)<*destlen) {
-      memcpy(d,*dest+(d-nstr),*destlen-(d-nstr));
-      d += *destlen-(d-nstr);
-    }
-    // Preserve the exact trailing EOL bytes from the original block.
-    // This ensures the following non-selected line stays separated after sorting.
-    if (!g_SortLinesUnique && trailingEolLen && (unsigned)(d-nstr)>=trailingEolLen) {
-      memcpy(nstr+(d-nstr)-trailingEolLen,*dest+trailingEolStart,trailingEolLen);
+    for(d=nstr,lineno2=0; lineno2<lineno; lineno2++) if (lineno2==0 || !g_SortLinesUnique || fcmpline(lines+lineno2,lines+lineno2-1)) {
+      d=strcpyline(d,lines[lineno2]);
+      if (lineeollen[lineno2]) {
+        memcpy(d,lineeol[lineno2],lineeollen[lineno2]);
+        d += lineeollen[lineno2];
+      }
     }
 #if NPPDEBUG /* { */
     if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr))
       MessageBox(g_nppData._nppHandle,"The size of the sort buffer should not have changed",PLUGIN_NAME, MB_OK|MB_ICONWARNING);
 #endif /* } */
+    *d='\0';
     freesafe(*dest,"strqsortlines");
     *dest=nstr;
     *destlen=d-nstr;
@@ -3223,7 +3209,9 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
     n=1;
   }
 failbreak:
-  if (lines) freesafe(lines,"strqsortlines");
+  if (lines) freesafe(lines,"strqsortlines-lines");
+  if (lineeol) freesafe(lineeol,"strqsortlines-lineeol");
+  if (lineeollen) freesafe((char *)lineeollen,"strqsortlines-lineeollen");
   return(n);
 }
 
