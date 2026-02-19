@@ -3170,9 +3170,11 @@ char *strcpyline(char *dest,char *src) {
 // new feature: numeric sort
 // new feature: ignore leading spaces,tabs
 EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,int nocase,int ascending,unsigned column) {
-  unsigned n=0/*,chn*/,lineno,lineno2,linessz;
+  unsigned n=0/*,chn*/,lineno,lineno2,linessz,trailingEolStart,trailingEolLen;
   char *d,*dp,*nstr; char **lines=NULL;
   if (*dest) {
+    for(trailingEolStart=*destlen; trailingEolStart && ((*dest)[trailingEolStart-1]=='\r' || (*dest)[trailingEolStart-1]=='\n'); trailingEolStart--) ;
+    trailingEolLen=*destlen-trailingEolStart;
     g_fcmpcolumn=column;
     g_fcmpascending=ascending;
     for(d=*dest+strspn(*dest,"\r\n"), lineno=0,linessz=0; *d ; lineno++) {
@@ -3204,6 +3206,11 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
     if (!g_SortLinesUnique && (unsigned)(d-nstr)<*destlen) {
       memcpy(d,*dest+(d-nstr),*destlen-(d-nstr));
       d += *destlen-(d-nstr);
+    }
+    // Preserve the exact trailing EOL bytes from the original block.
+    // This ensures the following non-selected line stays separated after sorting.
+    if (!g_SortLinesUnique && trailingEolLen && (unsigned)(d-nstr)>=trailingEolLen) {
+      memcpy(nstr+(d-nstr)-trailingEolLen,*dest+trailingEolStart,trailingEolLen);
     }
 #if NPPDEBUG /* { */
     if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr))
