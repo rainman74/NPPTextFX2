@@ -3171,10 +3171,8 @@ char *strcpyline(char *dest,char *src) {
 // new feature: ignore leading spaces,tabs
 EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,int nocase,int ascending,unsigned column) {
   unsigned n=0/*,chn*/,lineno,lineno2,linessz;
-  int hadTrailingLineEnding;
   char *d,*dp,*nstr; char **lines=NULL;
   if (*dest) {
-    hadTrailingLineEnding=(*destlen && ((*dest)[*destlen-1]=='\r' || (*dest)[*destlen-1]=='\n'));
     g_fcmpcolumn=column;
     g_fcmpascending=ascending;
     for(d=*dest+strspn(*dest,"\r\n"), lineno=0,linessz=0; *d ; lineno++) {
@@ -3183,7 +3181,7 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
       d+=strcspn(d,"\r\n");
       while(*d && (*d=='\r' || *d=='\n')) d++;
     }
-    if (!(nstr=(char *)mallocsafe(*destlen+3,"strqsortlines"))) goto failbreak;
+    if (!(nstr=(char *)mallocsafe(*destlen+1,"strqsortlines"))) goto failbreak;
     //memset(nstr,0,*destlen+1);
     g_fcmpnocase=nocase;
     qsortintro(lines,lineno,sizeof(lines[0]),fcmpline);
@@ -3199,17 +3197,16 @@ EXTERNC unsigned strqsortlines(char **dest,unsigned *destsz,unsigned *destlen,in
       dp+=strcspn(dp,"\r\n");
         d=strcpyline(d,lines[lineno2]);
     }
-    if (!g_SortLinesUnique) {
-      strcpy(d,dp); d += strlen(dp); // grab extra lines at the end
-      // Keep the following line separated when sorting a whole-line selection that
-      // does not include a trailing line ending in the selected text buffer.
-      if (lineno>1 && !hadTrailingLineEnding && d>nstr && d[-1]!='\r' && d[-1]!='\n') {
-        *d='\n';
-        d++;
-      }
+    if (!g_SortLinesUnique) {strcpy(d,dp); d += strlen(dp);} // grab extra lines at the end
+    // Sort without uniqueness should never change byte length. If line-ending
+    // reconstruction produced fewer bytes, restore the exact trailing bytes from
+    // the original block to preserve spacing after the sorted section.
+    if (!g_SortLinesUnique && (unsigned)(d-nstr)<*destlen) {
+      memcpy(d,*dest+(d-nstr),*destlen-(d-nstr));
+      d += *destlen-(d-nstr);
     }
 #if NPPDEBUG /* { */
-    if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr) && !(lineno>1 && !hadTrailingLineEnding && (unsigned)(d-nstr)==*destlen+1))
+    if (!g_SortLinesUnique && *destlen!=(unsigned)(d-nstr))
       MessageBox(g_nppData._nppHandle,"The size of the sort buffer should not have changed",PLUGIN_NAME, MB_OK|MB_ICONWARNING);
 #endif /* } */
     freesafe(*dest,"strqsortlines");
