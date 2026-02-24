@@ -7382,16 +7382,13 @@ EXTERNC BOOL RefreshTextFXMenuLabels(void) {
     hasValidCmdID=TRUE;
     if (label[0] && label[1]==NPPTEXT(':')) label+=2;
     if (label[0]==NPPTEXT('-') && !label[1]) {
-      MENUITEMINFOA mi;
+      MENUITEMINFO mi;
       ZeroMemory(&mi,sizeof(mi));
       mi.cbSize=cbMENUITEMINFO;
       mi.fMask=MIIM_TYPE;
       if (GetMenuItemInfoA(hMainMenu,cmdID,FALSE,&mi) && (mi.fType&MFT_SEPARATOR)) continue;
-#ifdef NPP_UNICODE
-      if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
-#else
-      if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_SEPARATOR,cmdID,NULL)) {
-#endif
+      mi.fType=MFT_SEPARATOR;
+      if (SetMenuItemInfoA(hMainMenu,cmdID,FALSE,(MENUITEMINFOA *)&mi)) {
         modified=TRUE;
       }
     } else {
@@ -7399,12 +7396,24 @@ EXTERNC BOOL RefreshTextFXMenuLabels(void) {
       WCHAR current[260];
       int cch=GetMenuStringW(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
       if (cch>0 && !lstrcmpW(current,label)) continue;
-      if (ModifyMenuW(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
+      MENUITEMINFOW mi;
+      ZeroMemory(&mi,sizeof(mi));
+      mi.cbSize=cbMENUITEMINFO;
+      mi.fMask=MIIM_STRING;
+      mi.dwTypeData=label;
+      mi.cch=lstrlenW(label);
+      if (SetMenuItemInfoW(hMainMenu,cmdID,FALSE,&mi)) {
 #else
       char current[260];
       int cch=GetMenuStringA(hMainMenu,cmdID,current,NELEM(current),MF_BYCOMMAND);
       if (cch>0 && !lstrcmpA(current,label)) continue;
-      if (ModifyMenuA(hMainMenu,cmdID,MF_BYCOMMAND|MF_STRING,cmdID,label)) {
+      MENUITEMINFOA mi;
+      ZeroMemory(&mi,sizeof(mi));
+      mi.cbSize=cbMENUITEMINFO;
+      mi.fMask=MIIM_STRING;
+      mi.dwTypeData=label;
+      mi.cch=lstrlenA(label);
+      if (SetMenuItemInfoA(hMainMenu,cmdID,FALSE,&mi)) {
 #endif
         modified=TRUE;
       }
